@@ -109,14 +109,21 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
 
   const fetchKeys = async () => {
     setLoading(true);
+    setError('');
     const path = 'access_keys';
     try {
+      console.log("Fetching keys from path:", path);
       const q = query(collection(db, path), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as KeyRecord));
+      console.log("Keys fetched:", data.length);
       setKeys(data);
-    } catch (e) {
-      handleFirestoreError(e, OperationType.LIST, path);
+    } catch (e: any) {
+      console.error("Fetch Keys Error:", e);
+      setError("Failed to fetch keys. " + (e.message || ""));
+      try {
+        handleFirestoreError(e, OperationType.LIST, path);
+      } catch (err) {}
     } finally {
       setLoading(false);
     }
@@ -152,8 +159,13 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
         isUsed: false
       });
       await fetchKeys();
-    } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, path);
+    } catch (e: any) {
+      console.error("Create Key Error:", e);
+      setError("Failed to generate key. Check console for details.");
+      // Even if handleFirestoreError throws, we want to set local error state if possible
+      try {
+        handleFirestoreError(e, OperationType.WRITE, path);
+      } catch (err) {}
     } finally {
       setGenerating(false);
     }
@@ -165,19 +177,21 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
       await deleteDoc(doc(db, 'access_keys', id));
       setKeys(keys.filter(k => k.id !== id));
     } catch (e) {
-      alert("Failed to delete key.");
+      console.error("Delete Key Error:", e);
+      setError("Failed to delete key.");
     }
   };
 
   const handleResetHWID = async (id: string) => {
     setResettingId(id);
+    setError('');
     try {
       const { updateDoc } = await import('firebase/firestore');
       await updateDoc(doc(db, 'access_keys', id), { hwid: null });
       setKeys(keys.map(k => k.id === id ? { ...k, hwid: null } : k));
     } catch (e) {
-      console.error(e);
-      alert("Failed to reset HWID");
+      console.error("Reset HWID Error:", e);
+      setError("Failed to reset HWID");
     } finally {
       setResettingId(null);
     }
@@ -317,6 +331,11 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
             {generating ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
             GENERATE NEW KEY
           </button>
+          {error && !isLoggingIn && (
+            <p className="mt-4 text-red-500 text-[10px] font-black uppercase text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">
+              {error}
+            </p>
+          )}
         </div>
 
         <button 
