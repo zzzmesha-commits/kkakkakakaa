@@ -292,7 +292,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                   <button
                     disabled={amount <= 0 || amount > user.robux}
                     onClick={() => setStep('confirmation')}
-                    className="w-full bg-blue-500 text-white font-black py-4.5 rounded-2xl hover:bg-blue-600 transition-all shadow-xl shadow-blue-200 dark:shadow-none disabled:bg-blue-300 disabled:shadow-none"
+                    className="w-full bg-blue-500 text-white font-black py-4 rounded-2xl hover:bg-blue-600 transition-all shadow-xl shadow-blue-200 dark:shadow-none disabled:bg-blue-300 disabled:shadow-none"
                   >
                     Next
                   </button>
@@ -355,7 +355,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                 <div className="w-full space-y-4">
                   <button
                     onClick={handleClose}
-                    className="w-full bg-slate-800 dark:bg-zinc-100 dark:text-zinc-900 text-white font-black py-4.5 rounded-2xl hover:bg-slate-900 dark:hover:bg-white transition-all shadow-xl shadow-slate-200 dark:shadow-none"
+                    className="w-full bg-slate-800 dark:bg-zinc-100 dark:text-zinc-900 text-white font-black py-4 rounded-2xl hover:bg-slate-900 dark:hover:bg-white transition-all shadow-xl shadow-slate-200 dark:shadow-none"
                   >
                     Close
                   </button>
@@ -417,13 +417,13 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={handleConfirmSend}
-                      className="bg-blue-600 text-white font-black py-4.5 rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none"
+                      className="bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none"
                     >
                       Send
                     </button>
                     <button
                       onClick={() => setStep('selection')}
-                      className="bg-gray-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-black py-4.5 rounded-2xl hover:bg-gray-300 dark:hover:bg-zinc-700 transition-all font-bold"
+                      className="bg-gray-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-black py-4 rounded-2xl hover:bg-gray-300 dark:hover:bg-zinc-700 transition-all font-bold"
                     >
                       Edit
                     </button>
