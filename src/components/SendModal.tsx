@@ -135,16 +135,16 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-center pl-1 pr-6 py-5">
-          <div className="flex items-center gap-0.5">
-             <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+        <div className="flex justify-between items-center pl-0 pr-6 py-5">
+          <div className="flex items-center gap-0">
+             <div className="w-7 h-7 flex items-center justify-center overflow-hidden ml-2 mt-0.5">
                 <img 
                   src="https://media.discordapp.net/attachments/1501019720604844084/1504448680600666233/lXCZhkN64AAAAABJRU5ErkJggg.png?ex=6a070684&is=6a05b504&hm=8797af119cccbd910ec55d2f6db5618742a5a28496db5be0fd90a2b0ee134e7d&=&format=webp&quality=lossless" 
                   alt="Robux Logo" 
                   className="w-full h-full object-contain"
                 />
              </div>
-             <h3 className="text-xl font-black text-slate-800 dark:text-white">Send Robux</h3>
+             <h3 className="text-xl font-black text-slate-800 dark:text-white ml-1">Send Robux</h3>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-zinc-200 mr-1">
@@ -240,7 +240,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
 
                 {/* Big Amount Overall Display */}
                  <div className="flex items-center justify-center gap-3 mb-6 mt-4">
-                    <div className="w-10 h-10 flex items-center justify-center">
+                    <div className="w-8 h-8 flex items-center justify-center">
                        <RobuxIcon className="w-full h-full" />
                     </div>
                    <span className="text-4xl font-black text-slate-800 dark:text-white tabular-nums tracking-tighter leading-none">{amount.toLocaleString()}</span>
