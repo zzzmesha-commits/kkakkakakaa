@@ -1,0 +1,6 @@
+{
+  "name": "corbin project",
+  "description": "A Roblox-style dashboard to manage your balance, search profiles, and send Robux to friends.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

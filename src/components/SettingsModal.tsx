@@ -1,0 +1,114 @@
+import { X } from 'lucide-react';
+import { User } from '../types';
+import { useState } from 'react';
+import { motion } from 'motion/react';
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  user: User;
+  onSave: (updatedUser: User) => void;
+  onLogout: () => void;
+}
+
+export default function SettingsModal({ isOpen, onClose, user, onSave, onLogout }: SettingsModalProps) {
+  const [formData, setFormData] = useState<User>(user);
+
+  const handleSave = () => {
+    onSave(formData);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="bg-white dark:bg-[#1b1d1f] rounded-[28px] w-full max-w-[460px] shadow-2xl overflow-hidden transition-colors"
+      >
+        <div className="flex justify-between items-center px-6 py-4.5 border-b border-gray-100 dark:border-zinc-800">
+          <h3 className="text-xl font-bold dark:text-white">Settings</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <X size={28} />
+          </button>
+        </div>
+
+        <div className="p-6">
+            <div className="flex flex-col items-center mb-6">
+            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-black dark:border-white shadow-lg bg-black relative">
+              <img 
+                src={formData.avatarUrl || "https://tr.rbxcdn.com/30DAY-AvatarHeadshot-C318C9101602477C9F9A7C91ECEEE44A-Png/150/150/AvatarHeadshot/Webp/noFilter"} 
+                alt="Preview"
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== "https://tr.rbxcdn.com/30DAY-AvatarHeadshot-C318C9101602477C9F9A7C91ECEEE44A-Png/150/150/AvatarHeadshot/Webp/noFilter") {
+                    target.src = "https://tr.rbxcdn.com/30DAY-AvatarHeadshot-C318C9101602477C9F9A7C91ECEEE44A-Png/150/150/AvatarHeadshot/Webp/noFilter";
+                  }
+                }}
+              />
+            </div>
+            <p className="mt-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+              Avatar Preview
+            </p>
+          </div>
+
+          <div className="space-y-5">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-500 dark:text-zinc-400">Display Name</label>
+              <input
+                type="text"
+                value={formData.displayName}
+                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 dark:border-zinc-700 bg-transparent dark:text-white rounded-2xl text-base focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="Display Name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-500 dark:text-zinc-400">Username</label>
+              <input
+                type="text"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 dark:border-zinc-700 bg-transparent dark:text-white rounded-2xl text-base focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="Username"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-500 dark:text-zinc-400">Robux Balance</label>
+              <input
+                type="text"
+                value={formData.robux.toLocaleString()}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/,/g, '');
+                  if (/^\d*$/.test(val)) {
+                    setFormData({ ...formData, robux: Number(val) });
+                  }
+                }}
+                className="w-full px-4 py-3 border border-gray-200 dark:border-zinc-700 bg-transparent dark:text-white rounded-2xl text-base focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="Balance"
+              />
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-3">
+            <button
+              onClick={handleSave}
+              className="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-full hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 dark:shadow-none"
+            >
+              Save Changes
+            </button>
+            <button
+              onClick={onLogout}
+              className="w-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold py-3 px-6 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+            >
+              Log Out
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
