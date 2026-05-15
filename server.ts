@@ -16,6 +16,27 @@ async function startServer() {
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0'
   ];
 
+  const ROBLOX_DOMAINS = [
+    'users.roblox.com',
+    'thumbnails.roblox.com',
+    'www.roblox.com',
+    'groups.roblox.com',
+    'economy.roblox.com',
+    'inventory.roblox.com'
+  ];
+
+  const getProxyUrl = (url: string) => {
+    let proxiedUrl = url;
+    for (const domain of ROBLOX_DOMAINS) {
+      if (proxiedUrl.includes(domain)) {
+        // Use roproxy.com as a common Roblox proxy
+        proxiedUrl = proxiedUrl.replace(domain, domain.replace('roblox.com', 'roproxy.com'));
+        break;
+      }
+    }
+    return proxiedUrl;
+  };
+
   const getHeaders = () => ({
     'User-Agent': USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
     'Accept': 'application/json, text/plain, */*',
@@ -32,12 +53,13 @@ async function startServer() {
   });
 
   const fetchWithRetry = async (url: string, options: any, retries = 2): Promise<Response | null> => {
+    const proxiedUrl = getProxyUrl(url);
     for (let i = 0; i < retries; i++) {
         try {
-            const res = await fetch(url, { ...options, signal: AbortSignal.timeout(8000) });
+            const res = await fetch(proxiedUrl, { ...options, signal: AbortSignal.timeout(8000) });
             if (res.ok) return res;
             if (res.status === 429) {
-                console.warn(`[RATE LIMIT] 429 detected for ${url}. Attempt ${i+1}/${retries}`);
+                console.warn(`[RATE LIMIT] 429 detected for ${proxiedUrl}. Attempt ${i+1}/${retries}`);
                 await new Promise(r => setTimeout(r, 1000 + (Math.random() * 2000)));
                 continue;
             }
