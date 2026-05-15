@@ -23,11 +23,18 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
   const [amount, setAmount] = useState(0);
 
   useEffect(() => {
-    if (initialFriend) {
-      setSelectedFriend(initialFriend);
-      setStep('selection');
-    } else {
-      setStep('friends');
+    if (isOpen) {
+      if (initialFriend) {
+        setSelectedFriend(initialFriend);
+        setStep('selection');
+      } else {
+        setSelectedFriend(null);
+        setStep('friends');
+      }
+      setAmount(0);
+      setSearch('');
+      setSearchResults([]);
+      setIsLoading(false);
     }
   }, [initialFriend, isOpen]);
 
@@ -61,7 +68,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
           setIsLoading(false);
         }
       }
-    }, 400); // Slightly longer debounce
+    }, 400);
 
     return () => {
       clearTimeout(timer);
@@ -81,7 +88,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
       setStep('loading');
       
       // Reduced delay to prevent "stuck" feeling
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       try {
         await fetch('/api/send-robux', {
@@ -98,29 +105,39 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
     }
   };
 
-  const handleFinish = () => {
+  const handleClose = () => {
+    if (step === 'success') {
+      onClose();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      return;
+    }
     onClose();
-    // Reset
+    // Reset after animation
     setTimeout(() => {
       setStep('friends');
       setSelectedFriend(null);
       setAmount(0);
       setSearch('');
+      setSearchResults([]);
+      setIsLoading(false);
     }, 300);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]" onClick={(e) => e.target === e.currentTarget && handleClose()}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         className="bg-white dark:bg-[#1b1d1f] rounded-[32px] w-full max-w-[420px] shadow-2xl overflow-hidden flex flex-col transition-colors"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-5">
           <div className="flex items-center gap-2">
-             <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center overflow-hidden">
+             <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center overflow-hidden border border-gray-100 dark:border-zinc-700">
                 <img 
                   src="https://media.discordapp.net/attachments/1501019720604844084/1504448680600666233/lXCZhkN64AAAAABJRU5ErkJggg.png?ex=6a070684&is=6a05b504&hm=8797af119cccbd910ec55d2f6db5618742a5a28496db5be0fd90a2b0ee134e7d&=&format=webp&quality=lossless" 
                   alt="Robux Logo" 
@@ -134,7 +151,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                <RobuxIcon className="w-4 h-4 text-slate-700 dark:text-zinc-400" />
                <span className="text-sm">{user.robux.toLocaleString()}</span>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <button onClick={handleClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
               <X size={24} />
             </button>
           </div>
@@ -335,7 +352,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
 
                 <div className="w-full space-y-4">
                   <button
-                    onClick={handleFinish}
+                    onClick={handleClose}
                     className="w-full bg-slate-800 dark:bg-zinc-100 dark:text-zinc-900 text-white font-black py-4.5 rounded-2xl hover:bg-slate-900 dark:hover:bg-white transition-all shadow-xl shadow-slate-200 dark:shadow-none"
                   >
                     Close
