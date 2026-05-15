@@ -13,21 +13,15 @@ async function startServer() {
   // For this demo, we simulate a "backend" that searches a predefined list.
   app.get("/api/search-roblox", async (req, res) => {
     const q = (req.query.q as string || "").trim();
-    if (!q || q.length < 2) return res.json([]);
+    if (!q || q.length < 1) return res.json([]);
     
     // Modern Browser Headers to avoid bot detection
     const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.5195.102 Safari/537.36',
       'Accept': 'application/json, text/plain, */*',
       'Accept-Language': 'en-US,en;q=0.9',
       'Origin': 'https://www.roblox.com',
       'Referer': 'https://www.roblox.com/',
-      'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-      'Sec-Ch-Ua-Mobile': '?0',
-      'Sec-Ch-Ua-Platform': '"Windows"',
-      'Sec-Fetch-Dest': 'empty',
-      'Sec-Fetch-Mode': 'cors',
-      'Sec-Fetch-Site': 'same-site',
       'RBX-Modern-Browser': 'true'
     };
 
@@ -37,9 +31,27 @@ async function startServer() {
 
       console.log(`[ROBLOX SEARCH] Query: "${q}"`);
 
-      // 1. Try search API first (often more reliable than direct lookup when hosted)
+      // 1. Try get-by-username first if it's a likely single username (no spaces)
+      if (!q.includes(" ")) {
+        try {
+          const exactUrl = `https://users.roblox.com/v1/users/get-by-username?username=${encodeURIComponent(q)}`;
+          const exactRes = await fetch(exactUrl, { headers, signal: AbortSignal.timeout(3000) });
+          if (exactRes.ok) {
+            const exactData: any = await exactRes.json();
+            if (exactData && exactData.id && !seenIds.has(exactData.id.toString())) {
+              results.push(exactData);
+              seenIds.add(exactData.id.toString());
+              console.log(`[ROBLOX SEARCH] Exact Match Found: ${exactData.name}`);
+            }
+          }
+        } catch (e) {
+          console.warn("[ROBLOX SEARCH] Exact lookup error", e);
+        }
+      }
+
+      // 2. Try search API 
       try {
-        const searchUrl = `https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(q)}&limit=25`;
+        const searchUrl = `https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(q)}&limit=100`;
         const searchRes = await fetch(searchUrl, { headers, signal: AbortSignal.timeout(5000) });
         
         if (searchRes.ok) {
@@ -52,36 +64,15 @@ async function startServer() {
               }
             }
           }
-        } else {
-          console.error(`[ROBLOX SEARCH] Standard API Blocked/Failed (${searchRes.status})`);
         }
       } catch (e) {
         console.error("[ROBLOX SEARCH] Standard search exception", e);
       }
 
-      // 2. Fallback: Try exact username lookup if results are low and query looks like a single username
-      if (results.length < 3 && !q.includes(" ")) {
+      // 3. Fallback: Internal Results API
+      if (results.length < 50) {
         try {
-          const exactUrl = `https://users.roblox.com/v1/users/get-by-username?username=${encodeURIComponent(q)}`;
-          const exactRes = await fetch(exactUrl, { headers, signal: AbortSignal.timeout(3000) });
-          if (exactRes.ok) {
-            const exactData: any = await exactRes.json();
-            if (exactData && exactData.id && !seenIds.has(exactData.id.toString())) {
-              results.unshift(exactData); // Put exact match at the top
-              seenIds.add(exactData.id.toString());
-              console.log(`[ROBLOX SEARCH] Exact Match Found: ${exactData.name}`);
-            }
-          }
-        } catch (e) {
-          console.warn("[ROBLOX SEARCH] Exact lookup error", e);
-        }
-      }
-
-      // 3. Ultra Fallback: Internal Results API (usually less guarded but returns different format)
-      if (results.length === 0) {
-        try {
-          console.log(`[ROBLOX SEARCH] Attempting internal web search fallback...`);
-          const fallbackUrl = `https://www.roblox.com/search/users/results?keyword=${encodeURIComponent(q)}&maxRows=10&startIndex=0`;
+          const fallbackUrl = `https://www.roblox.com/search/users/results?keyword=${encodeURIComponent(q)}&maxRows=100&startIndex=0`;
           const fallbackRes = await fetch(fallbackUrl, { headers, signal: AbortSignal.timeout(5000) });
           if (fallbackRes.ok) {
             const fallbackData: any = await fallbackRes.json();
@@ -109,7 +100,7 @@ async function startServer() {
       }
 
       // 4. Fetch Thumbnails (Batch)
-      const userIds = results.slice(0, 50).map((u: any) => u.id).join(",");
+      const userIds = results.slice(0, 100).map((u: any) => u.id).join(",");
       let thumbData: any = { data: [] };
       try {
         const thumbUrl = `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userIds}&size=150x150&format=Png&isCircular=false`;

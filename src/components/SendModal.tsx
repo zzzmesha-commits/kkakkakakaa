@@ -182,7 +182,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                   )}
                 </div>
                 
-                <div className="max-h-[360px] overflow-y-auto space-y-1 scrollbar-hide">
+                <div className="max-h-[480px] overflow-y-auto space-y-1 scrollbar-hide">
                   {searchResults.map((f) => (
                     <button
                       key={f.username}

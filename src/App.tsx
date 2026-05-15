@@ -242,7 +242,7 @@ export default function App() {
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-black text-center leading-[1.05] tracking-tight mb-12 sm:mb-20 font-builder-extended dark:text-white"
+            className="text-4xl md:text-6xl font-black text-center leading-[1.05] tracking-tight mb-12 sm:mb-20 font-sans dark:text-white"
             style={{ fontStyle: 'normal' }}
           >
             Enjoy up to 25%<br />more Robux
