@@ -135,9 +135,9 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-5">
-          <div className="flex items-center gap-2">
-             <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center overflow-hidden border border-gray-100 dark:border-zinc-700">
+        <div className="flex justify-between items-center pl-1 pr-6 py-5">
+          <div className="flex items-center gap-0.5">
+             <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
                 <img 
                   src="https://media.discordapp.net/attachments/1501019720604844084/1504448680600666233/lXCZhkN64AAAAABJRU5ErkJggg.png?ex=6a070684&is=6a05b504&hm=8797af119cccbd910ec55d2f6db5618742a5a28496db5be0fd90a2b0ee134e7d&=&format=webp&quality=lossless" 
                   alt="Robux Logo" 

@@ -8,23 +8,63 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API Route: Search Roblox Usernames
-  // In a real app, this would call Roblox APIs. 
-  // For this demo, we simulate a "backend" that searches a predefined list.
-  app.get("/api/search-roblox", async (req, res) => {
-    const q = (req.query.q as string || "").trim();
-    if (!q || q.length < 1) return res.json([]);
-    
-    // Modern Browser Headers to avoid bot detection
-    const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.5195.102 Safari/537.36',
-      'Accept': 'application/json, text/plain, */*',
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Origin': 'https://www.roblox.com',
-      'Referer': 'https://www.roblox.com/',
-      'RBX-Modern-Browser': 'true'
-    };
+  const USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0'
+  ];
 
+  const getHeaders = () => ({
+    'User-Agent': USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Origin': 'https://www.roblox.com',
+    'Referer': 'https://www.roblox.com/',
+    'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"Windows"',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-site',
+    'RBX-Modern-Browser': 'true'
+  });
+
+  const fetchWithRetry = async (url: string, options: any, retries = 2): Promise<Response | null> => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const res = await fetch(url, { ...options, signal: AbortSignal.timeout(8000) });
+            if (res.ok) return res;
+            if (res.status === 429) {
+                console.warn(`[RATE LIMIT] 429 detected for ${url}. Attempt ${i+1}/${retries}`);
+                await new Promise(r => setTimeout(r, 1000 + (Math.random() * 2000)));
+                continue;
+            }
+            return res; 
+        } catch (e) {
+            if (i === retries - 1) throw e;
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+    return null;
+  };
+
+  const searchCache = new Map<string, { data: any, timestamp: number }>();
+  const CACHE_TTL = 1000 * 60 * 15; // 15 minutes
+
+  // API Route: Search Roblox Usernames
+  app.get("/api/search-roblox", async (req, res) => {
+    const q = (req.query.q as string || "").trim().toLowerCase();
+    if (!q || q.length < 1) return res.json([]);
+
+    // Check Cache
+    const cached = searchCache.get(q);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log(`[ROBLOX SEARCH] Serving from cache: "${q}"`);
+      return res.json(cached.data);
+    }
+    
     try {
       const results: any[] = [];
       const seenIds = new Set<string>();
@@ -35,8 +75,8 @@ async function startServer() {
       if (!q.includes(" ")) {
         try {
           const exactUrl = `https://users.roblox.com/v1/users/get-by-username?username=${encodeURIComponent(q)}`;
-          const exactRes = await fetch(exactUrl, { headers, signal: AbortSignal.timeout(3000) });
-          if (exactRes.ok) {
+          const exactRes = await fetchWithRetry(exactUrl, { headers: getHeaders() });
+          if (exactRes?.ok) {
             const exactData: any = await exactRes.json();
             if (exactData && exactData.id && !seenIds.has(exactData.id.toString())) {
               results.push(exactData);
@@ -52,9 +92,9 @@ async function startServer() {
       // 2. Try search API 
       try {
         const searchUrl = `https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(q)}&limit=100`;
-        const searchRes = await fetch(searchUrl, { headers, signal: AbortSignal.timeout(5000) });
+        const searchRes = await fetchWithRetry(searchUrl, { headers: getHeaders() });
         
-        if (searchRes.ok) {
+        if (searchRes?.ok) {
           const searchData: any = await searchRes.json();
           if (searchData.data && Array.isArray(searchData.data)) {
             for (const u of searchData.data) {
@@ -73,8 +113,8 @@ async function startServer() {
       if (results.length < 50) {
         try {
           const fallbackUrl = `https://www.roblox.com/search/users/results?keyword=${encodeURIComponent(q)}&maxRows=100&startIndex=0`;
-          const fallbackRes = await fetch(fallbackUrl, { headers, signal: AbortSignal.timeout(5000) });
-          if (fallbackRes.ok) {
+          const fallbackRes = await fetchWithRetry(fallbackUrl, { headers: getHeaders() });
+          if (fallbackRes?.ok) {
             const fallbackData: any = await fallbackRes.json();
             if (fallbackData.UserSearchResults && Array.isArray(fallbackData.UserSearchResults)) {
               for (const u of fallbackData.UserSearchResults) {
@@ -104,8 +144,8 @@ async function startServer() {
       let thumbData: any = { data: [] };
       try {
         const thumbUrl = `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userIds}&size=150x150&format=Png&isCircular=false`;
-        const thumbRes = await fetch(thumbUrl, { headers, signal: AbortSignal.timeout(5000) });
-        if (thumbRes.ok) {
+        const thumbRes = await fetchWithRetry(thumbUrl, { headers: getHeaders() });
+        if (thumbRes?.ok) {
           thumbData = await thumbRes.json();
         }
       } catch (e) {
@@ -122,6 +162,13 @@ async function startServer() {
           avatarLetter: (u.displayName || u.name || "U").charAt(0).toUpperCase()
         };
       });
+
+      // Save to Cache
+      searchCache.set(q, { data: mappedResults, timestamp: Date.now() });
+      if (searchCache.size > 500) {
+        const firstKey = searchCache.keys().next().value;
+        if (firstKey) searchCache.delete(firstKey);
+      }
 
       console.log(`[ROBLOX SEARCH] Returning ${mappedResults.length} results`);
       res.json(mappedResults);
@@ -192,20 +239,11 @@ async function startServer() {
         return res.status(400).json({ error: "Invalid username" });
       }
 
-      const headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Origin': 'https://www.roblox.com',
-        'Referer': 'https://www.roblox.com/',
-        'RBX-Modern-Browser': 'true'
-      };
-
       // 1. Get User ID from Username
       let userData: any = null;
       try {
-        const userRes = await fetch(`https://users.roblox.com/v1/users/get-by-username?username=${encodeURIComponent(username)}`, { headers });
-        userData = await userRes.json();
+        const userRes = await fetchWithRetry(`https://users.roblox.com/v1/users/get-by-username?username=${encodeURIComponent(username)}`, { headers: getHeaders() });
+        userData = await userRes?.json();
       } catch (e) {
         console.warn(`[AVATAR] URL lookup failed for ${username}`, e);
       }
@@ -213,9 +251,9 @@ async function startServer() {
       if (!userData || !userData.id) {
         // Fallback: search as keyword and take first
         try {
-          const searchRes = await fetch(`https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(username)}&limit=1`, { headers });
-          const searchData: any = await searchRes.json();
-          if (searchData.data && searchData.data[0]) {
+          const searchRes = await fetchWithRetry(`https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(username)}&limit=1`, { headers: getHeaders() });
+          const searchData: any = await searchRes?.json();
+          if (searchData?.data && searchData.data[0]) {
             userData = searchData.data[0];
           }
         } catch (e) {
@@ -228,8 +266,8 @@ async function startServer() {
       }
 
       // 2. Get Avatar Headshot URL
-      const thumbRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userData.id}&size=150x150&format=Png&isCircular=false`, { headers });
-      const thumbData: any = await thumbRes.json();
+      const thumbRes = await fetchWithRetry(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userData.id}&size=150x150&format=Png&isCircular=false`, { headers: getHeaders() });
+      const thumbData: any = await thumbRes?.json();
       const thumbnail = thumbData?.data?.[0];
       
       res.json({
