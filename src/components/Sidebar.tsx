@@ -38,7 +38,14 @@ export default function Sidebar({ user }: SidebarProps) {
             }}
           />
         </div>
-        <span>{user.displayName}</span>
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <span className="truncate">{user.displayName}</span>
+          <img 
+            src="https://en.help.roblox.com/hc/article_attachments/41933934939156" 
+            alt="Verified" 
+            className="w-3.5 h-3.5 object-contain shrink-0"
+          />
+        </div>
       </div>
       {navItems.map((item) => (
         <a

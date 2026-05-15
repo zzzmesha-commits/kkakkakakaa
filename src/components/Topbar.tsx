@@ -76,7 +76,14 @@ export default function Topbar({
               }}
             />
           </div>
-          <span className="hidden lg:inline">{user.displayName}</span>
+          <div className="hidden lg:flex items-center gap-1">
+            <span>{user.displayName}</span>
+            <img 
+              src="https://en.help.roblox.com/hc/article_attachments/41933934939156" 
+              alt="Verified" 
+              className="w-3.5 h-3.5 object-contain shrink-0"
+            />
+          </div>
         </div>
         <button className="relative flex text-[#393B3D] dark:text-zinc-300 hover:text-black dark:hover:text-white">
           <Bell size={20} />

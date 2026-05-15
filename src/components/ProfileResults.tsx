@@ -60,9 +60,15 @@ export default function ProfileResults({ results, onSendRobux, onClose }: Profil
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-bold text-lg truncate">{profile.display}</h3>
-                  <ShieldCheck size={16} className="text-blue-500 shrink-0" />
+                  <img 
+                    src="https://en.help.roblox.com/hc/article_attachments/41933934939156" 
+                    alt="Verified" 
+                    className="w-4 h-4 object-contain shrink-0"
+                  />
                 </div>
-                <p className="text-sm text-gray-500 truncate mb-3">@{profile.username}</p>
+                <div className="mb-3">
+                  <p className="text-sm text-gray-500 truncate">@{profile.username}</p>
+                </div>
                 <button
                   onClick={() => onSendRobux(profile)}
                   className="w-full bg-blue-600 text-white text-xs font-bold py-2 rounded-full hover:bg-blue-700 transition-colors shadow-sm"

@@ -197,7 +197,14 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                         )}
                       </div>
                       <div className="flex-1 overflow-hidden">
-                        <div className="font-bold text-sm text-slate-800 dark:text-zinc-100 truncate">{f.display}</div>
+                        <div className="flex items-center gap-1">
+                          <div className="font-bold text-sm text-slate-800 dark:text-zinc-100 truncate">{f.display}</div>
+                          <img 
+                            src="https://en.help.roblox.com/hc/article_attachments/41933934939156" 
+                            alt="Verified" 
+                            className="w-3 h-3 object-contain shrink-0"
+                          />
+                        </div>
                         <div className="text-xs text-gray-500 dark:text-zinc-400 truncate font-medium">@{f.username}</div>
                       </div>
                     </button>
@@ -382,7 +389,14 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                         </div>
                       )}
                    </div>
-                   <div className="font-black text-xl text-slate-800 dark:text-white mb-1">{selectedFriend?.display}</div>
+                   <div className="flex items-center gap-1.5 mb-1.5">
+                     <div className="font-black text-xl text-slate-800 dark:text-white">{selectedFriend?.display}</div>
+                     <img 
+                       src="https://en.help.roblox.com/hc/article_attachments/41933934939156" 
+                       alt="Verified" 
+                       className="w-4.5 h-4.5 object-contain shrink-0"
+                     />
+                   </div>
                    <div className="text-gray-500 dark:text-zinc-400 font-bold text-sm mb-6">@{selectedFriend?.username}</div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
