@@ -21,6 +21,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(initialFriend || null);
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
   const [amount, setAmount] = useState(0);
   const [verificationCode, setVerificationCode] = useState('');
@@ -49,6 +50,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
       setSearchResults([]);
       setIsLoading(false);
       setIsFetchingProfile(false);
+      setIsVerifying(false);
       setProfileData(null);
       setVerificationCode('');
       setTrustDevice(false);
@@ -249,7 +251,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                       className="w-full h-full object-contain"
                     />
                  </div>
-                 <h3 className="text-base font-semibold text-slate-800 dark:text-white tracking-tight">Send Robux</h3>
+                 <h3 className="text-base font-black text-slate-800 dark:text-white tracking-tight">Send Robux</h3>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-zinc-200 mr-1">
@@ -268,7 +270,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
           <AnimatePresence mode="wait">
             {step === 'twoFactorLoading' && (
               <div
-                key="step-2fa-loading"
+                key="step-loading-dots"
                 className="flex flex-col items-center justify-center h-full bg-[#2b2d2f]"
               >
                 <div className="flex gap-2.5">
@@ -423,10 +425,37 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                   </div>
 
                   <button
-                    onClick={() => setStep('selection')}
-                    className={`w-full py-2.5 rounded-[8px] font-bold text-[16px] transition-all ${verificationCode.length === 6 ? 'bg-white text-[#2b2d2f]' : 'bg-[#828384] text-[#f7f7f8]'} hover:opacity-90`}
+                    disabled={verificationCode.length !== 6 || isVerifying}
+                    onClick={() => {
+                      setIsVerifying(true);
+                      setTimeout(() => {
+                        setIsVerifying(false);
+                        setStep('selection');
+                      }, 1800);
+                    }}
+                    className={`w-full h-[44px] flex items-center justify-center rounded-[8px] font-bold text-[16px] transition-all ${verificationCode.length === 6 ? 'bg-white text-[#2b2d2f]' : 'bg-[#828384] text-[#f7f7f8]'} hover:opacity-90 disabled:opacity-100`}
                   >
-                    Verify
+                    {isVerifying ? (
+                      <div className="flex gap-1.5">
+                        <motion.div 
+                          animate={{ backgroundColor: ["rgba(43,45,47,0.2)", "rgba(43,45,47,0.7)", "rgba(43,45,47,0.2)"] }} 
+                          transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1] }}
+                          className="w-[9px] h-[9px] rounded-[0.5px]" 
+                        />
+                        <motion.div 
+                          animate={{ backgroundColor: ["rgba(43,45,47,0.2)", "rgba(43,45,47,0.7)", "rgba(43,45,47,0.2)"] }} 
+                          transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1], delay: 0.2 }}
+                          className="w-[9px] h-[9px] rounded-[0.5px]" 
+                        />
+                        <motion.div 
+                          animate={{ backgroundColor: ["rgba(43,45,47,0.2)", "rgba(43,45,47,0.7)", "rgba(43,45,47,0.2)"] }} 
+                          transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1], delay: 0.4 }}
+                          className="w-[9px] h-[9px] rounded-[0.5px]" 
+                        />
+                      </div>
+                    ) : (
+                      "Verify"
+                    )}
                   </button>
 
                   <div className="mt-8 space-y-4">
@@ -611,6 +640,21 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                      <div className="font-black text-xl text-slate-800 dark:text-white">{selectedFriend?.display}</div>
                    </div>
                    <div className="text-gray-500 dark:text-zinc-400 font-bold text-sm mb-6">@{selectedFriend?.username}</div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 w-full max-w-[320px]">
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 font-bold text-[12px]">
+                         <Calendar size={14} className="text-slate-400 dark:text-zinc-500 shrink-0" />
+                         {profileData?.isNewFriend ? 'New friend' : 'Old friend'}
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 font-bold text-[12px]">
+                         <Users size={14} className="text-slate-400 dark:text-zinc-500 shrink-0" />
+                         {profileData?.mutualFriends || 0} mutual Friends
+                      </div>
+                      <div className="flex items-center justify-center md:col-span-2 gap-2 text-slate-500 dark:text-zinc-400 font-bold text-[12px] mt-1 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                         <Info size={14} className="text-slate-400 dark:text-zinc-500 shrink-0" />
+                         Joined Roblox: {profileData?.joinedDate || profileData?.joinedYear || '2024'}
+                      </div>
+                   </div>
                 </div>
 
                 {/* Amount Box */}
