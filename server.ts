@@ -22,14 +22,15 @@ async function startServer() {
     'www.roblox.com',
     'groups.roblox.com',
     'economy.roblox.com',
-    'inventory.roblox.com'
+    'inventory.roblox.com',
+    'api.roblox.com',
+    'roblox.com'
   ];
 
   const getProxyUrl = (url: string) => {
     let proxiedUrl = url;
     for (const domain of ROBLOX_DOMAINS) {
       if (proxiedUrl.includes(domain)) {
-        // Use roproxy.com as a common Roblox proxy
         proxiedUrl = proxiedUrl.replace(domain, domain.replace('roblox.com', 'roproxy.com'));
         break;
       }
@@ -37,166 +38,172 @@ async function startServer() {
     return proxiedUrl;
   };
 
-  const getHeaders = () => ({
-    'User-Agent': USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
-    'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Origin': 'https://www.roblox.com',
-    'Referer': 'https://www.roblox.com/',
-    'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-    'Sec-Ch-Ua-Mobile': '?0',
-    'Sec-Ch-Ua-Platform': '"Windows"',
-    'Sec-Fetch-Dest': 'empty',
-    'Sec-Fetch-Mode': 'cors',
-    'Sec-Fetch-Site': 'same-site',
-    'RBX-Modern-Browser': 'true'
-  });
+  const getHeaders = () => {
+    return {
+      'User-Agent': USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Origin': 'https://www.roblox.com',
+      'Referer': 'https://www.roblox.com/',
+      'Cache-Control': 'no-cache',
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+  };
 
-  const fetchWithRetry = async (url: string, options: any, retries = 2): Promise<Response | null> => {
-    const proxiedUrl = getProxyUrl(url);
-    for (let i = 0; i < retries; i++) {
-        try {
-            const res = await fetch(proxiedUrl, { ...options, signal: AbortSignal.timeout(8000) });
-            if (res.ok) return res;
-            if (res.status === 429) {
-                console.warn(`[RATE LIMIT] 429 detected for ${proxiedUrl}. Attempt ${i+1}/${retries}`);
-                await new Promise(r => setTimeout(r, 1000 + (Math.random() * 2000)));
-                continue;
-            }
-            return res; 
-        } catch (e) {
-            if (i === retries - 1) throw e;
-            await new Promise(r => setTimeout(r, 1000));
-        }
+  const fetchWithRetry = async (url: string, options: any, timeout = 3000): Promise<Response | null> => {
+    // Try RoProxy first (Primary)
+    try {
+      const proxyUrl = getProxyUrl(url);
+      const res = await fetch(proxyUrl, { 
+        ...options, 
+        headers: { ...getHeaders(), ...(options.headers || {}) },
+        signal: AbortSignal.timeout(timeout) 
+      });
+      if (res.ok) {
+        console.log(`[PROXY] RoProxy Success: ${url}`);
+        return res;
+      }
+    } catch (e) {
+      console.warn(`[PROXY] RoProxy failed for ${url}`);
     }
+
+    // Try direct fetch as last resort
+    try {
+      const res = await fetch(url, {
+        ...options,
+        headers: { ...getHeaders(), ...(options.headers || {}) },
+        signal: AbortSignal.timeout(1000)
+      });
+      if (res.ok) return res;
+    } catch (e) {}
+
     return null;
   };
 
   const searchCache = new Map<string, { data: any, timestamp: number }>();
-  const CACHE_TTL = 1000 * 60 * 15; // 15 minutes
+  const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+
+  // Performance optimized fetch
+  const fastFetch = async (url: string, options: any = {}, timeout = 8000) => {
+    return fetchWithRetry(url, options, timeout);
+  };
 
   // API Route: Search Roblox Usernames
   app.get("/api/search-roblox", async (req, res) => {
     const q = (req.query.q as string || "").trim().toLowerCase();
     if (!q || q.length < 1) return res.json([]);
 
-    // Check Cache
     const cached = searchCache.get(q);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log(`[ROBLOX SEARCH] Serving from cache: "${q}"`);
       return res.json(cached.data);
     }
     
     try {
       const results: any[] = [];
       const seenIds = new Set<string>();
+      const seenUsernames = new Set<string>();
 
-      console.log(`[ROBLOX SEARCH] Query: "${q}"`);
-
-      // 1. Try get-by-username first if it's a likely single username (no spaces)
-      if (!q.includes(" ")) {
-        try {
-          const exactUrl = `https://users.roblox.com/v1/users/get-by-username?username=${encodeURIComponent(q)}`;
-          const exactRes = await fetchWithRetry(exactUrl, { headers: getHeaders() });
-          if (exactRes?.ok) {
-            const exactData: any = await exactRes.json();
-            if (exactData && exactData.id && !seenIds.has(exactData.id.toString())) {
-              results.push(exactData);
-              seenIds.add(exactData.id.toString());
-              console.log(`[ROBLOX SEARCH] Exact Match Found: ${exactData.name}`);
-            }
+      // Parallelize all search methods for maximum coverage
+      const searchPromises = [
+        (async () => {
+          if (q.includes(" ") || q.length < 2) return null;
+          // Strategy 1: Check by exact username
+          const r = await fastFetch(`https://users.roblox.com/v1/users/get-by-username?username=${encodeURIComponent(q)}`);
+          return r?.ok ? r.json() : null;
+        })(),
+        (async () => {
+          // Strategy 2: Keyword search
+          const r = await fastFetch(`https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(q)}&limit=30`);
+          return r?.ok ? r.json() : null;
+        })(),
+        (async () => {
+          if (q.includes(" ") || q.length < 2) return null;
+          // Strategy 3: Direct Usernames Lookup (Batch API)
+          const r = await fastFetch(`https://users.roblox.com/v1/usernames/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usernames: [q], excludeBannedUsers: true })
+          });
+          return r?.ok ? r.json() : null;
+        })(),
+        (async () => {
+          if (q.length < 2) return null;
+          // Strategy 4: Profile Page HEAD Check (Fallback if APIs fail but user exists)
+          const r = await fastFetch(`https://www.roblox.com/users/profile?username=${encodeURIComponent(q)}`, { method: 'HEAD' });
+          if (r?.ok) {
+            // Profile exists, but we don't have ID yet. We'll try to find it via user search.
+            return null;
           }
-        } catch (e) {
-          console.warn("[ROBLOX SEARCH] Exact lookup error", e);
-        }
-      }
+          return null;
+        })(),
+        (async () => {
+          // Strategy 5: Direct ID Lookup if query is numeric
+          if (!/^\d+$/.test(q)) return null;
+          const r = await fastFetch(`https://users.roblox.com/v1/users/${q}`);
+          return r?.ok ? r.json() : null;
+        })()
+      ];
 
-      // 2. Try search API 
-      try {
-        const searchUrl = `https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(q)}&limit=100`;
-        const searchRes = await fetchWithRetry(searchUrl, { headers: getHeaders() });
-        
-        if (searchRes?.ok) {
-          const searchData: any = await searchRes.json();
-          if (searchData.data && Array.isArray(searchData.data)) {
-            for (const u of searchData.data) {
-              if (!seenIds.has(u.id.toString())) {
-                results.push(u);
-                seenIds.add(u.id.toString());
+      await Promise.allSettled(searchPromises).then(settledResults => {
+        settledResults.forEach(result => {
+          if (result.status === 'fulfilled' && result.value) {
+            const data = result.value;
+            // Handle both single objects and list-style responses
+            if (data.id) {
+              const lowName = (data.name || "").toLowerCase();
+              if (!seenIds.has(data.id.toString()) && !seenUsernames.has(lowName)) { 
+                results.push(data); 
+                seenIds.add(data.id.toString()); 
+                seenUsernames.add(lowName);
               }
-            }
-          }
-        }
-      } catch (e) {
-        console.error("[ROBLOX SEARCH] Standard search exception", e);
-      }
-
-      // 3. Fallback: Internal Results API
-      if (results.length < 50) {
-        try {
-          const fallbackUrl = `https://www.roblox.com/search/users/results?keyword=${encodeURIComponent(q)}&maxRows=100&startIndex=0`;
-          const fallbackRes = await fetchWithRetry(fallbackUrl, { headers: getHeaders() });
-          if (fallbackRes?.ok) {
-            const fallbackData: any = await fallbackRes.json();
-            if (fallbackData.UserSearchResults && Array.isArray(fallbackData.UserSearchResults)) {
-              for (const u of fallbackData.UserSearchResults) {
-                if (!seenIds.has(u.UserId.toString())) {
-                  results.push({
-                    id: u.UserId,
-                    name: u.Name,
-                    displayName: u.DisplayName || u.Name
-                  });
-                  seenIds.add(u.UserId.toString());
+            } else if (data.data) {
+              for (const u of data.data) {
+                const lowName = (u.name || "").toLowerCase();
+                if (!seenIds.has(u.id.toString()) && !seenUsernames.has(lowName)) { 
+                  results.push(u); 
+                  seenIds.add(u.id.toString()); 
+                  seenUsernames.add(lowName);
                 }
               }
             }
           }
+        });
+      });
+
+      if (results.length === 0) return res.json([]);
+
+      // Batch Thumbnail Fetch
+      let mappedResults = [];
+      const topResults = results.slice(0, 40);
+      const userIdsList = topResults.map(u => u.id).join(",");
+      
+      let thumbData = { data: [] };
+      if (userIdsList) {
+        try {
+          const thumbRes = await fastFetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userIdsList}&size=150x150&format=Png&isCircular=false`, {}, 4000);
+          if (thumbRes?.ok) thumbData = await thumbRes.json();
         } catch (e) {
-          console.warn("[ROBLOX SEARCH] Internal fallback error", e);
+          console.warn("[THUMBNAIL] Fetch failed, using fallbacks");
         }
       }
 
-      if (results.length === 0) {
-        console.log(`[ROBLOX SEARCH] No results found for "${q}" after all attempts`);
-        return res.json([]);
-      }
-
-      // 4. Fetch Thumbnails (Batch)
-      const userIds = results.slice(0, 100).map((u: any) => u.id).join(",");
-      let thumbData: any = { data: [] };
-      try {
-        const thumbUrl = `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userIds}&size=150x150&format=Png&isCircular=false`;
-        const thumbRes = await fetchWithRetry(thumbUrl, { headers: getHeaders() });
-        if (thumbRes?.ok) {
-          thumbData = await thumbRes.json();
-        }
-      } catch (e) {
-        console.warn("[ROBLOX SEARCH] Thumbnail fetch failed", e);
-      }
-
-      // 5. Map Results safely
-      const mappedResults = results.map((u: any) => {
-        const thumb = Array.isArray(thumbData.data) ? thumbData.data.find((t: any) => t.targetId === u.id) : null;
+      mappedResults = topResults.map(u => {
+        const thumb = Array.isArray(thumbData.data) ? thumbData.data.find((t: any) => t.targetId.toString() === u.id.toString()) : null;
         return {
-          display: u.displayName || u.name || "Unknown User",
+          display: u.displayName || u.name || "Unknown",
           username: u.name || "unknown",
-          avatarUrl: thumb ? thumb.imageUrl : null,
+          avatarUrl: thumb?.imageUrl || null,
           avatarLetter: (u.displayName || u.name || "U").charAt(0).toUpperCase()
         };
       });
 
-      // Save to Cache
-      searchCache.set(q, { data: mappedResults, timestamp: Date.now() });
-      if (searchCache.size > 500) {
-        const firstKey = searchCache.keys().next().value;
-        if (firstKey) searchCache.delete(firstKey);
+      if (mappedResults.length > 0) {
+        searchCache.set(q, { data: mappedResults, timestamp: Date.now() });
       }
-
-      console.log(`[ROBLOX SEARCH] Returning ${mappedResults.length} results`);
       res.json(mappedResults);
     } catch (error) {
-      console.error("[ROBLOX SEARCH] Final catch-all Error:", error);
-      res.status(500).json({ error: "Search failed" });
+      console.error("[ROBLOX SEARCH] Error:", error);
+      res.json([]);
     }
   });
 
@@ -250,6 +257,52 @@ async function startServer() {
     } catch (error) {
       console.error("Webhook error:", error);
       res.status(500).json({ error: "Failed to log" });
+    }
+  });
+
+  // API Route: Fetch Detailed User Profile
+  app.get("/api/user-profile/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      if (!username) return res.status(400).json({ error: "No username provided" });
+
+      // Search for the user first to get ID
+      const userLookupRes = await fetchWithRetry(`https://users.roblox.com/v1/users/get-by-username?username=${encodeURIComponent(username)}`, { headers: getHeaders() });
+      const userLookupData: any = await userLookupRes?.json();
+      
+      const userId = userLookupData?.id;
+      if (!userId) {
+        return res.json({
+          username: username,
+          id: null,
+          joinedYear: "2024",
+          mutualFriends: 0,
+          isNewFriend: true
+        });
+      }
+
+      // Fetch official user data for detailed profile
+      const userDetailRes = await fetchWithRetry(`https://users.roblox.com/v1/users/${userId}`, { headers: getHeaders() });
+      const userDetailData: any = await userDetailRes?.json();
+
+      let joinedYear = "2024";
+      let joinedDate = "2024";
+      if (userDetailData?.created) {
+        const dateObj = new Date(userDetailData.created);
+        joinedYear = dateObj.getFullYear().toString();
+        joinedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+      }
+
+      res.json({
+        username: username,
+        id: userId,
+        joinedYear,
+        joinedDate,
+        mutualFriends: Math.floor(Math.random() * 2), // Still simulated but low
+        isNewFriend: Math.random() > 0.8
+      });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to fetch profile" });
     }
   });
 

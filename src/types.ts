@@ -3,7 +3,9 @@ export interface User {
   username: string;
   robux: number;
   avatarUrl?: string;
+  email?: string;
   theme?: 'light' | 'dark';
+  friends?: Friend[];
 }
 
 export interface Friend {

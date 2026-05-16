@@ -62,9 +62,12 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    if (isAdmin()) {
+    const isAuth = isAdmin();
+    setAuthenticated(isAuth);
+    if (isAuth) {
       fetchKeys();
     } else {
       setLoading(false);
@@ -90,6 +93,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
 
       if (res.ok && data.success) {
         localStorage.setItem("isAdminAuthenticated", "true");
+        setAuthenticated(true);
         fetchKeys();
       } else {
         setError(data.error || "Invalid Administrative Credentials.");
@@ -104,7 +108,9 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
 
   const handleAdminLogoutAction = () => {
     localStorage.removeItem("isAdminAuthenticated");
-    window.location.reload(); // Simple way to reset state
+    setAuthenticated(false);
+    setKeys([]);
+    setLoading(false);
   };
 
   const fetchKeys = async () => {
@@ -203,7 +209,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  if (!isAdmin()) {
+  if (!authenticated) {
     return (
       <div className="fixed inset-0 z-[300] bg-black flex items-center justify-center p-4">
         <motion.div 

@@ -19,7 +19,9 @@ export default function App() {
     username: "kwon",
     robux: 8320,
     avatarUrl: "https://tr.rbxcdn.com/30DAY-AvatarHeadshot-C318C9101602477C9F9A7C91ECEEE44A-Png/150/150/AvatarHeadshot/Webp/noFilter",
-    theme: 'light'
+    email: "kwon.roblox@gmail.com",
+    theme: 'light',
+    friends: []
   });
 
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -75,7 +77,7 @@ export default function App() {
     if (!query.trim()) return;
     setIsSearching(true);
     try {
-      const res = await fetch(`/api/search-roblox?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/search-roblox?q=${encodeURIComponent(query)}&v=${Date.now()}`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setSearchResults(data);
@@ -276,14 +278,17 @@ export default function App() {
               <div 
                 className="relative p-4 px-6 flex items-center gap-5 min-h-[110px]"
                 style={{ 
-                  backgroundImage: 'url(https://media.discordapp.net/attachments/1501019720604844084/1504332164219539476/noFilter.png?ex=6a069a01&is=6a054881&hm=78ab1c6bb1b37a57530b83fddc60b3b70d647694520b29b5bb49ce0e9866f853&=&format=webp&quality=lossless)',
+                  backgroundImage: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(https://media.discordapp.net/attachments/1501019720604844084/1504332164219539476/noFilter.png?ex=6a093d01&is=6a07eb81&hm=c9dfb44821393fb7d8cdd0edc7b989d03dedf31fd4291be0faeaec4eb9b56b9e&=&format=webp&quality=lossless)',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center'
                 }}
               >
-                <div className="absolute inset-0 bg-black/40" />
-                <div className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 border-[3px] border-white overflow-hidden shadow-lg flex-shrink-0">
-                  <img src="https://tr.rbxcdn.com/180DAY-b42b320a980757b9940fff73b9f316c6/150/150/Image/Png/noFilter" alt="Adopt Me" className="w-full h-full object-cover" />
+                <div className="relative z-10 w-20 h-20 rounded-full overflow-hidden flex-shrink-0 bg-transparent flex items-center justify-center">
+                  <img 
+                    src="https://tr.rbxcdn.com/180DAY-b42b320a980757b9940fff73b9f316c6/150/150/Image/Png/noFilter" 
+                    alt="Adopt Me" 
+                    className="w-full h-full object-cover" 
+                  />
                 </div>
                 <div className="relative z-10 text-white">
                   <div className="flex items-center gap-2">
@@ -303,9 +308,9 @@ export default function App() {
                         <span className="text-[32px] font-black text-slate-800 dark:text-zinc-100 tabular-nums leading-none tracking-tight">{pkg.robux.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 text-slate-400 dark:text-zinc-500 font-bold relative text-sm sm:text-base">
+                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500 font-bold relative text-base sm:text-lg">
                           <div className="absolute inset-x-0 h-[1.5px] bg-slate-400 dark:bg-zinc-600 top-1/2 -translate-y-1/2 pointer-events-none" />
-                          <RobuxIcon size={18} />
+                          <RobuxIcon size={20} className="opacity-40" />
                           <span>{pkg.original.toLocaleString()}</span>
                         </div>
                         {pkg.more && (
@@ -326,7 +331,6 @@ export default function App() {
               </div>
             </div>
           </section>
-
           <section className="mt-16 mb-32 max-w-[713px] mx-auto">
             <h2 className="text-xl font-bold mb-6 dark:text-white">Robux packages</h2>
             <div className="border border-gray-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-[#1b1d1f] overflow-hidden shadow-sm divide-y divide-gray-100 dark:divide-zinc-800 transition-colors">
@@ -339,10 +343,10 @@ export default function App() {
                     </div>
                     {pkg.original && (
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 text-slate-400 dark:text-zinc-500 font-bold relative">
+                        <div className="flex items-center gap-2.5 text-slate-400 dark:text-zinc-500 font-bold relative">
                           <div className="absolute inset-x-0 h-[2px] bg-slate-400 dark:bg-zinc-600 top-1/2 -translate-y-1/2 pointer-events-none" />
-                          <RobuxIcon size={22} />
-                          <span className="text-xl">{pkg.original.toLocaleString()}</span>
+                          <RobuxIcon size={26} className="opacity-40" />
+                          <span className="text-2xl">{pkg.original.toLocaleString()}</span>
                         </div>
                         {pkg.more && (
                           <div className="bg-[#EBEEF5] dark:bg-zinc-800 text-[#7A869A] dark:text-zinc-400 font-black text-[11px] px-3 py-1 rounded-full">
@@ -402,6 +406,7 @@ export default function App() {
                   displayName: "kwon", 
                   username: "kwon", 
                   robux: 8320,
+                  email: "kwon.roblox@gmail.com",
                   avatarUrl: "https://tr.rbxcdn.com/180DAY-40e9f0d0611c6d1d2b0e6e7c10b64ecc/150/150/AvatarHeadshot/Png/noFilter"
                 };
                 saveUser(defaultUser);
