@@ -291,10 +291,10 @@ export default function App() {
                   />
                 </div>
                 <div className="relative z-10 text-white">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-2xl font-black drop-shadow-md">[🍣] Adopt Me!</h3>
-                    <Info size={18} className="text-white drop-shadow-md cursor-pointer opacity-80 hover:opacity-100 transition-opacity" />
-                  </div>
+                  <h3 className="text-2xl font-black drop-shadow-md flex items-center gap-1.5">
+                    [🍣] Adopt Me!
+                    <Info size={18} className="text-white drop-shadow-md cursor-pointer opacity-80 hover:opacity-100 transition-opacity translate-y-[2px]" />
+                  </h3>
                   <p className="text-sm font-medium opacity-90 drop-shadow-sm">+1 Pet Pen Slot</p>
                 </div>
               </div>

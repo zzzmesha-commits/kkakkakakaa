@@ -243,15 +243,15 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
             </>
           ) : (
             <>
-               <div className="flex items-center gap-1.5 pt-0.5">
-                 <div className="w-5 h-5 flex items-center justify-center overflow-hidden shrink-0">
+               <div className="flex items-center gap-0.5 pt-0.5">
+                 <div className="w-8 h-8 flex items-center justify-center overflow-hidden shrink-0">
                     <img 
                       src="https://media.discordapp.net/attachments/1501019720604844084/1504448680600666233/lXCZhkN64AAAAABJRU5ErkJggg.png?ex=6a0900c4&is=6a07af44&hm=1fb0d30c231caba3c9bdf7df9d977306bb2bb9b289027f1ad40b400baa3ed94d&=&format=webp&quality=lossless" 
                       alt="Robux Logo" 
                       className="w-full h-full object-contain"
                     />
                  </div>
-                 <h3 className="text-base font-black text-slate-800 dark:text-white tracking-tight">Send Robux</h3>
+                 <h3 className="text-[18px] font-black text-slate-800 dark:text-white tracking-tight ml-0.5">Send Robux</h3>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-zinc-200 mr-1">
@@ -651,7 +651,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                          {profileData?.mutualFriends || 0} mutual Friends
                       </div>
                       <div className="flex items-center justify-center md:col-span-2 gap-2 text-slate-500 dark:text-zinc-400 font-bold text-[12px] mt-1 border-t border-gray-100 dark:border-zinc-700 pt-3">
-                         <Info size={14} className="text-slate-400 dark:text-zinc-500 shrink-0" />
+                         <Calendar size={14} className="text-slate-400 dark:text-zinc-500 shrink-0" />
                          Joined Roblox: {profileData?.joinedDate || profileData?.joinedYear || '2024'}
                       </div>
                    </div>
@@ -680,9 +680,12 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                       Edit
                     </button>
                   </div>
-                  <p className="text-[11px] text-gray-500 dark:text-zinc-500 font-medium leading-tight px-2">
-                    You need an age check or parental consent to send Robux. Once you send, you cannot cancel.
-                  </p>
+                  <div className="flex items-start gap-2 px-2">
+                    <Info size={14} className="text-gray-400 dark:text-zinc-500 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-gray-500 dark:text-zinc-500 font-medium leading-tight">
+                      You need an age check or parental consent to send Robux. Once you send, you cannot cancel!
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             )}

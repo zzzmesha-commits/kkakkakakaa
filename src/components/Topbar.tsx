@@ -37,7 +37,7 @@ export default function Topbar({
         <span>BLOX</span>
       </a>
       <nav className="hidden lg:flex items-center gap-16 ml-12">
-        {['Discover', 'Marketplace', 'Create', 'Robux'].map((item) => (
+        {['Charts', 'Marketplace', 'Create', 'Robux'].map((item) => (
           <a
             key={item}
             href="#"
