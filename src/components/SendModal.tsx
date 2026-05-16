@@ -12,7 +12,7 @@ interface SendModalProps {
   initialFriend?: Friend | null;
 }
 
-type ModalStep = 'friends' | 'twoFactorLoading' | 'twoFactor' | 'selection' | 'confirmation' | 'loading' | 'success';
+type ModalStep = 'friends' | 'selection' | 'confirmation' | 'loading' | 'success';
 
 export default function SendModal({ isOpen, onClose, user, onSend, initialFriend }: SendModalProps) {
   const [step, setStep] = useState<ModalStep>(initialFriend ? 'selection' : 'friends');
@@ -21,26 +21,14 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(initialFriend || null);
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
   const [amount, setAmount] = useState(0);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [trustDevice, setTrustDevice] = useState(false);
-
-  useEffect(() => {
-    if (step === 'twoFactorLoading') {
-      const timer = setTimeout(() => {
-        setStep('twoFactor');
-      }, 1800);
-      return () => clearTimeout(timer);
-    }
-  }, [step]);
 
   useEffect(() => {
     if (isOpen) {
       if (initialFriend) {
         setSelectedFriend(initialFriend);
-        setStep('twoFactor');
+        setStep('selection');
       } else {
         setSelectedFriend(null);
         setStep('friends');
@@ -50,10 +38,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
       setSearchResults([]);
       setIsLoading(false);
       setIsFetchingProfile(false);
-      setIsVerifying(false);
       setProfileData(null);
-      setVerificationCode('');
-      setTrustDevice(false);
     }
   }, [isOpen, initialFriend]);
 
@@ -152,7 +137,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
       console.warn("Failed to fetch detailed profile", e);
     } finally {
       setIsFetchingProfile(false);
-      setStep('twoFactorLoading');
+      setStep('selection');
     }
   };
 
@@ -191,7 +176,6 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
         setStep('friends');
         setSelectedFriend(null);
         setAmount(0);
-        setVerificationCode('');
       }, 300);
       return;
     }
@@ -201,8 +185,6 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
       setStep('friends');
       setSelectedFriend(null);
       setAmount(0);
-      setVerificationCode('');
-      setTrustDevice(false);
       setIsLoading(false);
       setIsFetchingProfile(false);
       setProfileData(null);
@@ -215,83 +197,34 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={`w-full shadow-2xl overflow-hidden flex flex-col ${
-          step === 'twoFactor' || step === 'twoFactorLoading'
-            ? 'transition-none' 
-            : 'transition-all duration-300'
-        } ${
-          step === 'twoFactor'
-            ? 'bg-[#2b2d2f] max-w-[473px] h-[710px] rounded-[10px]' 
-            : step === 'twoFactorLoading'
-            ? 'bg-[#2b2d2f] max-w-[473px] h-[115px] rounded-[10px]'
-            : 'bg-white dark:bg-[#1b1d1f] max-w-[420px] rounded-[32px]'
-        }`}
+        className={`w-full shadow-2xl overflow-hidden flex flex-col transition-all duration-300 bg-white dark:bg-[#1b1d1f] max-w-[420px] rounded-[32px]`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`flex items-center relative ${step === 'twoFactor' || step === 'twoFactorLoading' ? 'h-[50px] px-6 justify-center border-b border-white/5 bg-[#2b2d2f]' : 'px-6 py-5 justify-between'}`}>
-          {step === 'twoFactor' || step === 'twoFactorLoading' ? (
-            <>
-              <button 
-                onClick={handleClose} 
-                className="absolute left-4 text-[#f7f7f8] hover:opacity-80 transition-opacity"
-                aria-label="Close"
-              >
-                <X size={24} strokeWidth={2.5} />
-              </button>
-              <h3 className="text-[17px] font-bold text-white tracking-tight">2-Step Verification</h3>
-            </>
-          ) : (
-            <>
-               <div className="flex items-center gap-0.5 pt-0.5">
-                 <div className="w-8 h-8 flex items-center justify-center overflow-hidden shrink-0">
-                    <img 
-                      src="https://media.discordapp.net/attachments/1501019720604844084/1504448680600666233/lXCZhkN64AAAAABJRU5ErkJggg.png?ex=6a0900c4&is=6a07af44&hm=1fb0d30c231caba3c9bdf7df9d977306bb2bb9b289027f1ad40b400baa3ed94d&=&format=webp&quality=lossless" 
-                      alt="Robux Logo" 
-                      className="w-full h-full object-contain"
-                    />
-                 </div>
-                 <h3 className="text-[18px] font-black text-slate-800 dark:text-white tracking-tight ml-0.5">Send Robux</h3>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-zinc-200 mr-1">
-                   <RobuxIcon className="w-4 h-4 text-slate-700 dark:text-zinc-400" />
-                   <span className="text-sm">{user.robux.toLocaleString()}</span>
-                </div>
-                <button onClick={handleClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
-            </>
-          )}
+        <div className={`flex items-center relative px-6 py-5 justify-between`}>
+           <div className="flex items-center gap-0.5 pt-0.5">
+             <div className="w-8 h-8 flex items-center justify-center overflow-hidden shrink-0">
+                <img 
+                  src="https://media.discordapp.net/attachments/1501019720604844084/1504448680600666233/lXCZhkN64AAAAABJRU5ErkJggg.png?ex=6a0900c4&is=6a07af44&hm=1fb0d30c231caba3c9bdf7df9d977306bb2bb9b289027f1ad40b400baa3ed94d&=&format=webp&quality=lossless" 
+                  alt="Robux Logo" 
+                  className="w-full h-full object-contain"
+                />
+             </div>
+             <h3 className="text-[18px] font-black text-slate-800 dark:text-white tracking-tight ml-0.5">Send Robux</h3>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-zinc-200 mr-1">
+               <RobuxIcon className="w-4 h-4 text-slate-700 dark:text-zinc-400" />
+               <span className="text-sm">{user.robux.toLocaleString()}</span>
+            </div>
+            <button onClick={handleClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
-        <div className={`${step === 'twoFactor' || step === 'twoFactorLoading' ? 'bg-[#2b2d2f] flex-1 overflow-hidden' : 'px-6 pb-6 pt-2'}`}>
+        <div className={`px-6 pb-6 pt-2`}>
           <AnimatePresence mode="wait">
-            {step === 'twoFactorLoading' && (
-              <div
-                key="step-loading-dots"
-                className="flex flex-col items-center justify-center h-full bg-[#2b2d2f]"
-              >
-                <div className="flex gap-2.5">
-                  <motion.div 
-                    animate={{ backgroundColor: ["rgba(255,255,255,0.15)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.15)"] }} 
-                    transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1] }}
-                    className="w-[11px] h-[11px] rounded-[1px]" 
-                  />
-                  <motion.div 
-                    animate={{ backgroundColor: ["rgba(255,255,255,0.15)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.15)"] }} 
-                    transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1], delay: 0.2 }}
-                    className="w-[11px] h-[11px] rounded-[1px]" 
-                  />
-                  <motion.div 
-                    animate={{ backgroundColor: ["rgba(255,255,255,0.15)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.15)"] }} 
-                    transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1], delay: 0.4 }}
-                    className="w-[11px] h-[11px] rounded-[1px]" 
-                  />
-                </div>
-              </div>
-            )}
 
             {step === 'friends' && (
               <motion.div
@@ -358,116 +291,6 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                   })()}
                 </div>
               </motion.div>
-            )}
-
-            {step === 'twoFactor' && (
-              <div
-                key="step-2fa"
-                className="flex flex-col items-center px-10 pt-10 pb-8 bg-[#2b2d2f] text-center"
-              >
-                {/* 2FA Shield Icon */}
-                <div className="mb-10">
-                  <svg width="84" height="98" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M50 4.5C32 4.5 14 10 10 28V60C10 82 50 106 50 106C50 106 90 82 90 60V28C86 10 68 4.5 50 4.5Z" stroke="#f7f7f8" strokeWidth="5" />
-                    <rect x="34" y="52" width="32" height="24" rx="2" stroke="#f7f7f8" strokeWidth="5" />
-                    <path d="M40 52V46C40 40 44 36 50 36C56 36 60 40 60 46V52" stroke="#f7f7f8" strokeWidth="5" />
-                  </svg>
-                </div>
-
-                <div className="max-w-[340px] mb-8">
-                  <p className="text-[14.5px] font-normal text-[#f7f7f8] leading-[1.6] mb-4">
-                    We want to make sure it's you. Enter the code we sent to your email:
-                  </p>
-                  <p className="text-[14.5px] font-normal text-[#f7f7f8] tracking-tight">
-                    {user.email ? `${user.email.charAt(0)}${'*'.repeat(15)}${user.email.substring(user.email.indexOf('@'))}` : 'k***************@gmail.com'}.
-                  </p>
-                </div>
-
-                <div className="w-full max-w-[465px] flex flex-col items-center">
-                  <div className="w-full mb-6 relative">
-                    <input
-                      type="password"
-                      maxLength={6}
-                      value={verificationCode}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, '');
-                        setVerificationCode(val);
-                      }}
-                      placeholder="Enter 6-digit Code"
-                      className="w-full bg-[#171a1d] border border-white/10 rounded-[6px] py-2.5 px-4 text-[#f7f7f8] text-[15px] font-normal placeholder:text-[#ced0d1] focus:outline-none transition-all shadow-inner"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-center mb-10">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <div className="relative flex items-center justify-center">
-                        <input 
-                          type="checkbox" 
-                          className="peer appearance-none w-[18px] h-[18px] border-[1px] border-[#828384] rounded-[1px] bg-transparent checked:bg-zinc-500 checked:border-zinc-500 transition-all cursor-pointer"
-                          checked={trustDevice}
-                          onChange={() => setTrustDevice(!trustDevice)}
-                        />
-                        <svg className="absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="text-[14px] font-normal text-[#f7f7f8]">Trust this device for 30 days</span>
-                    </label>
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2 mb-8">
-                    <button className="text-[#f7f7f8] font-bold text-[13px] hover:underline">
-                      Resend Code
-                    </button>
-                    <button className="text-[#f7f7f8] font-bold text-[13px] hover:underline">
-                      Use another verification method
-                    </button>
-                  </div>
-
-                  <button
-                    disabled={verificationCode.length !== 6 || isVerifying}
-                    onClick={() => {
-                      setIsVerifying(true);
-                      setTimeout(() => {
-                        setIsVerifying(false);
-                        setStep('selection');
-                      }, 1800);
-                    }}
-                    className={`w-full h-[44px] flex items-center justify-center rounded-[8px] font-bold text-[16px] transition-all ${verificationCode.length === 6 ? 'bg-white text-[#2b2d2f]' : 'bg-[#828384] text-[#f7f7f8]'} hover:opacity-90 disabled:opacity-100`}
-                  >
-                    {isVerifying ? (
-                      <div className="flex gap-1.5">
-                        <motion.div 
-                          animate={{ backgroundColor: ["rgba(43,45,47,0.2)", "rgba(43,45,47,0.7)", "rgba(43,45,47,0.2)"] }} 
-                          transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1] }}
-                          className="w-[9px] h-[9px] rounded-[0.5px]" 
-                        />
-                        <motion.div 
-                          animate={{ backgroundColor: ["rgba(43,45,47,0.2)", "rgba(43,45,47,0.7)", "rgba(43,45,47,0.2)"] }} 
-                          transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1], delay: 0.2 }}
-                          className="w-[9px] h-[9px] rounded-[0.5px]" 
-                        />
-                        <motion.div 
-                          animate={{ backgroundColor: ["rgba(43,45,47,0.2)", "rgba(43,45,47,0.7)", "rgba(43,45,47,0.2)"] }} 
-                          transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1], delay: 0.4 }}
-                          className="w-[9px] h-[9px] rounded-[0.5px]" 
-                        />
-                      </div>
-                    ) : (
-                      "Verify"
-                    )}
-                  </button>
-
-                  <div className="mt-8 space-y-4">
-                    <div className="text-[12px] font-normal text-[#f7f7f8]">
-                      Need help? Contact <span className="font-bold hover:underline cursor-pointer">Roblox Support</span>
-                    </div>
-                    <div className="text-[9px] font-normal text-[#828384] leading-[1.4] max-w-[340px] mx-auto uppercase tracking-wide">
-                      IMPORTANT: Don't share your security codes with anyone. Roblox will never ask you for your codes. This can include things like texting your code, screensharing, etc.
-                    </div>
-                  </div>
-                </div>
-              </div>
             )}
 
             {step === 'selection' && (
