@@ -12,7 +12,7 @@ interface SendModalProps {
   initialFriend?: Friend | null;
 }
 
-type ModalStep = 'friends' | 'twoFactor' | 'selection' | 'confirmation' | 'loading' | 'success';
+type ModalStep = 'friends' | 'twoFactorLoading' | 'twoFactor' | 'selection' | 'confirmation' | 'loading' | 'success';
 
 export default function SendModal({ isOpen, onClose, user, onSend, initialFriend }: SendModalProps) {
   const [step, setStep] = useState<ModalStep>(initialFriend ? 'selection' : 'friends');
@@ -25,6 +25,15 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
   const [amount, setAmount] = useState(0);
   const [verificationCode, setVerificationCode] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
+
+  useEffect(() => {
+    if (step === 'twoFactorLoading') {
+      const timer = setTimeout(() => {
+        setStep('twoFactor');
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
 
   useEffect(() => {
     if (isOpen) {
@@ -141,7 +150,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
       console.warn("Failed to fetch detailed profile", e);
     } finally {
       setIsFetchingProfile(false);
-      setStep('twoFactor');
+      setStep('twoFactorLoading');
     }
   };
 
@@ -204,16 +213,22 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={`w-full shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${
-          step === 'twoFactor' 
+        className={`w-full shadow-2xl overflow-hidden flex flex-col ${
+          step === 'twoFactor' || step === 'twoFactorLoading'
+            ? 'transition-none' 
+            : 'transition-all duration-300'
+        } ${
+          step === 'twoFactor'
             ? 'bg-[#2b2d2f] max-w-[473px] h-[710px] rounded-[10px]' 
+            : step === 'twoFactorLoading'
+            ? 'bg-[#2b2d2f] max-w-[473px] h-[115px] rounded-[10px]'
             : 'bg-white dark:bg-[#1b1d1f] max-w-[420px] rounded-[32px]'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`flex items-center relative ${step === 'twoFactor' ? 'h-[50px] px-6 justify-center border-b border-white/5 bg-[#2b2d2f]' : 'px-6 py-5 justify-between'}`}>
-          {step === 'twoFactor' ? (
+        <div className={`flex items-center relative ${step === 'twoFactor' || step === 'twoFactorLoading' ? 'h-[50px] px-6 justify-center border-b border-white/5 bg-[#2b2d2f]' : 'px-6 py-5 justify-between'}`}>
+          {step === 'twoFactor' || step === 'twoFactorLoading' ? (
             <>
               <button 
                 onClick={handleClose} 
@@ -249,8 +264,33 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
           )}
         </div>
 
-        <div className={`${step === 'twoFactor' ? 'bg-[#2b2d2f] flex-1 overflow-hidden' : 'px-6 pb-6 pt-2'}`}>
+        <div className={`${step === 'twoFactor' || step === 'twoFactorLoading' ? 'bg-[#2b2d2f] flex-1 overflow-hidden' : 'px-6 pb-6 pt-2'}`}>
           <AnimatePresence mode="wait">
+            {step === 'twoFactorLoading' && (
+              <div
+                key="step-2fa-loading"
+                className="flex flex-col items-center justify-center h-full bg-[#2b2d2f]"
+              >
+                <div className="flex gap-2.5">
+                  <motion.div 
+                    animate={{ backgroundColor: ["rgba(255,255,255,0.15)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.15)"] }} 
+                    transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1] }}
+                    className="w-[11px] h-[11px] rounded-[1px]" 
+                  />
+                  <motion.div 
+                    animate={{ backgroundColor: ["rgba(255,255,255,0.15)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.15)"] }} 
+                    transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1], delay: 0.2 }}
+                    className="w-[11px] h-[11px] rounded-[1px]" 
+                  />
+                  <motion.div 
+                    animate={{ backgroundColor: ["rgba(255,255,255,0.15)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.15)"] }} 
+                    transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 1], delay: 0.4 }}
+                    className="w-[11px] h-[11px] rounded-[1px]" 
+                  />
+                </div>
+              </div>
+            )}
+
             {step === 'friends' && (
               <motion.div
                 key="step-friends"
@@ -319,11 +359,8 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
             )}
 
             {step === 'twoFactor' && (
-              <motion.div
+              <div
                 key="step-2fa"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
                 className="flex flex-col items-center px-10 pt-10 pb-8 bg-[#2b2d2f] text-center"
               >
                 {/* 2FA Shield Icon */}
@@ -344,7 +381,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                   </p>
                 </div>
 
-                <div className="w-full max-w-[450px] flex flex-col items-center">
+                <div className="w-full max-w-[465px] flex flex-col items-center">
                   <div className="w-full mb-6 relative">
                     <input
                       type="password"
@@ -401,7 +438,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {step === 'selection' && (
