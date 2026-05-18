@@ -193,185 +193,202 @@ export default function App() {
     );
   }
 
-  if (isAdminPanelOpen || (!isVerified && !isAdmin())) {
-    if (isAdminPanelOpen) {
-      return (
-        <AdminPanel
-          onClose={() => setIsAdminPanelOpen(false)}
-        />
-      );
-    }
-    return (
-      <KeyGateModal
-        onVerify={handleKeyVerified}
-        onAdminLogin={handleAdminLogin}
-      />
-    );
-  }
-
-  // The main app is always rendered, but we overlay the gate if not verified
+  // Shared root wrapper to handle dark mode background across all states
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0c0d0e] transition-colors">
-      <Topbar 
-        user={user} 
-        onOpenSettings={() => setIsSettingsOpen(true)} 
-        onSearch={handleSearch}
-        currentUser={currentUser}
-        onOpenAdmin={() => setIsAdminPanelOpen(true)}
-        onLogin={handleAdminLogin}
-      />
-      
-      <div className="flex">
-        <Sidebar user={user} />
-        
-        <main className="relative flex-1 p-6 md:p-12 max-w-6xl mx-auto overflow-x-hidden transition-colors">
-          <div className="grid-bg" />
-          
-          <div className="absolute right-6 top-6 z-10 flex items-center gap-3 bg-white dark:bg-[#1b1d1f] border border-gray-200 dark:border-zinc-800 rounded-full px-4 py-2 shadow-sm transition-colors">
-            <div className="flex items-center gap-1.5 text-sm font-semibold dark:text-zinc-100">
-              <RobuxIcon size={20} className="text-slate-800 dark:text-zinc-100" />
-              <span className="text-lg">{user.robux.toLocaleString()}</span>
-            </div>
-            <button 
-              onClick={() => checkVerificationBeforeSend()}
-              className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold border border-gray-200 dark:border-zinc-700 rounded-full hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors dark:text-zinc-300"
-            >
-              <Send size={12} />
-              Send
-            </button>
-          </div>
-
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-black text-center leading-[1.05] tracking-tight mb-12 sm:mb-20 font-sans dark:text-white"
-            style={{ fontStyle: 'normal' }}
+    <div className={`min-h-screen transition-colors ${user.theme === 'dark' ? 'dark bg-[#0c0d0e]' : 'bg-white'}`}>
+      <AnimatePresence mode="wait">
+        {isAdminPanelOpen ? (
+          <motion.div
+            key="admin"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            Enjoy up to 25%<br />more Robux
-          </motion.h1>
-
-          <AnimatePresence>
-            {isSearching && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center justify-center gap-3 py-12 text-blue-600 font-bold"
-              >
-                <Loader2 className="animate-spin" />
-                Fetching Roblox Profiles...
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {!isSearching && searchResults && (
-            <ProfileResults 
-              results={searchResults}
-              onSendRobux={handleOpenSendToFriend}
-              onClose={() => setSearchResults(null)}
+            <AdminPanel onClose={() => setIsAdminPanelOpen(false)} />
+          </motion.div>
+        ) : (!isVerified && !isAdmin()) ? (
+          <motion.div
+            key="gate"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <KeyGateModal
+              onVerify={handleKeyVerified}
+              onAdminLogin={handleAdminLogin}
             />
-          )}
-
-          <section className="mt-12 max-w-[713px] mx-auto">
-            <h2 className="text-xl font-bold mb-4 dark:text-white">Bonus item we picked for you</h2>
-            <div className="border border-gray-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-[#1b1d1f] overflow-hidden shadow-sm transition-colors">
-              <div 
-                className="relative p-4 px-6 flex items-center gap-5 min-h-[110px]"
-                style={{ 
-                  backgroundImage: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(https://media.discordapp.net/attachments/1501019720604844084/1504332164219539476/noFilter.png?ex=6a093d01&is=6a07eb81&hm=c9dfb44821393fb7d8cdd0edc7b989d03dedf31fd4291be0faeaec4eb9b56b9e&=&format=webp&quality=lossless)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}
-              >
-                <div className="relative z-10 w-20 h-20 rounded-full overflow-hidden flex-shrink-0 bg-transparent flex items-center justify-center">
-                  <img 
-                    src="https://tr.rbxcdn.com/180DAY-b42b320a980757b9940fff73b9f316c6/150/150/Image/Png/noFilter" 
-                    alt="Adopt Me" 
-                    className="w-full h-full object-cover" 
-                  />
-                </div>
-                <div className="relative z-10 text-white">
-                  <h3 className="text-2xl font-black drop-shadow-md flex items-center gap-1.5">
-                    [🍣] Adopt Me!
-                    <Info size={18} className="text-white drop-shadow-md cursor-pointer opacity-80 hover:opacity-100 transition-opacity translate-y-[2px]" />
-                  </h3>
-                  <p className="text-sm font-medium opacity-90 drop-shadow-sm">+1 Pet Pen Slot</p>
-                </div>
-              </div>
-
-              <div className="divide-y divide-gray-100 dark:divide-zinc-800">
-                {PACKAGES.map((pkg, i) => (
-                  <div key={i} className="flex items-center p-3 px-6 md:px-10 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
-                    <div className="flex-1 flex items-center gap-3 relative -left-4">
-                      <div className="flex items-center gap-2">
-                        <RobuxIcon size={28} className="text-slate-800 dark:text-zinc-100" />
-                        <span className="text-[32px] font-black text-slate-800 dark:text-zinc-100 tabular-nums leading-none tracking-tight">{pkg.robux.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500 font-bold relative text-base sm:text-lg">
-                          <div className="absolute inset-x-0 h-[1.5px] bg-slate-400 dark:bg-zinc-600 top-1/2 -translate-y-1/2 pointer-events-none" />
-                          <RobuxIcon size={20} className="opacity-40" />
-                          <span>{pkg.original.toLocaleString()}</span>
-                        </div>
-                        {pkg.more && (
-                          <div className="bg-[#EBEEF5] dark:bg-zinc-800 text-[#7A869A] dark:text-zinc-400 font-black text-[10px] px-2 py-0.5 rounded-full">
-                            + {pkg.more} more
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => checkVerificationBeforeSend()}
-                      className="bg-[#E8EBF2] dark:bg-zinc-800 hover:bg-[#DEE3ED] dark:hover:bg-zinc-700 transition-all text-slate-800 dark:text-zinc-200 font-black py-2 px-6 rounded-xl min-w-[120px] text-base active:scale-[0.98]"
-                    >
-                      {pkg.price}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-          <section className="mt-16 mb-32 max-w-[713px] mx-auto">
-            <h2 className="text-xl font-bold mb-6 dark:text-white">Robux packages</h2>
-            <div className="border border-gray-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-[#1b1d1f] overflow-hidden shadow-sm divide-y divide-gray-100 dark:divide-zinc-800 transition-colors">
-              {STANDARD_PACKAGES.map((pkg, i) => (
-                <div key={i} className="flex items-center p-3.5 px-10 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
-                  <div className="flex-1 flex items-center gap-3 text-slate-800 dark:text-zinc-100 relative -left-4">
-                    <div className="flex items-center gap-3">
-                      <RobuxIcon size={32} />
-                      <span className="text-[34px] font-black tabular-nums leading-none tracking-tight">{pkg.robux.toLocaleString()}</span>
-                    </div>
-                    {pkg.original && (
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2.5 text-slate-400 dark:text-zinc-500 font-bold relative">
-                          <div className="absolute inset-x-0 h-[2px] bg-slate-400 dark:bg-zinc-600 top-1/2 -translate-y-1/2 pointer-events-none" />
-                          <RobuxIcon size={26} className="opacity-40" />
-                          <span className="text-2xl">{pkg.original.toLocaleString()}</span>
-                        </div>
-                        {pkg.more && (
-                          <div className="bg-[#EBEEF5] dark:bg-zinc-800 text-[#7A869A] dark:text-zinc-400 font-black text-[11px] px-3 py-1 rounded-full">
-                            + {pkg.more} more
-                          </div>
-                        )}
-                      </div>
-                    )}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="app"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col"
+          >
+            <Topbar 
+              user={user} 
+              onOpenSettings={() => setIsSettingsOpen(true)} 
+              onSearch={handleSearch}
+              currentUser={currentUser}
+              onOpenAdmin={() => setIsAdminPanelOpen(true)}
+              onLogin={handleAdminLogin}
+            />
+            
+            <div className="flex">
+              <Sidebar user={user} />
+              
+              <main className="relative flex-1 p-6 md:p-12 max-w-6xl mx-auto overflow-x-hidden">
+                <div className="grid-bg" />
+                
+                <div className="absolute right-6 top-6 z-10 flex items-center gap-3 bg-white dark:bg-[#1b1d1f] border border-gray-200 dark:border-zinc-800 rounded-full px-4 py-2 shadow-sm transition-colors">
+                  <div className="flex items-center gap-1.5 text-sm font-semibold dark:text-zinc-100">
+                    <RobuxIcon size={20} className="text-slate-800 dark:brightness-0 dark:invert" />
+                    <span className="text-lg">{user.robux.toLocaleString()}</span>
                   </div>
                   <button 
                     onClick={() => checkVerificationBeforeSend()}
-                    className="bg-[#E8EBF2] dark:bg-zinc-800 hover:bg-[#DEE3ED] dark:hover:bg-zinc-700 transition-all text-slate-800 dark:text-zinc-200 font-black py-2.5 px-8 rounded-xl min-w-[140px] text-lg active:scale-[0.98]"
+                    className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold border border-gray-200 dark:border-zinc-700 rounded-full hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors dark:text-zinc-300"
                   >
-                    {pkg.price}
+                    <Send size={12} />
+                    Send
                   </button>
                 </div>
-              ))}
+
+                <motion.h1 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-4xl md:text-6xl font-black text-center leading-[1.05] tracking-tight mb-12 sm:mb-20 font-sans dark:text-white"
+                  style={{ fontStyle: 'normal' }}
+                >
+                  Enjoy up to 25%<br />more Robux
+                </motion.h1>
+
+                <AnimatePresence>
+                  {isSearching && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center justify-center gap-3 py-12 text-blue-600 font-bold"
+                    >
+                      <Loader2 className="animate-spin" />
+                      Fetching Roblox Profiles...
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {!isSearching && searchResults && (
+                  <ProfileResults 
+                    results={searchResults}
+                    onSendRobux={handleOpenSendToFriend}
+                    onClose={() => setSearchResults(null)}
+                  />
+                )}
+
+                <section className="mt-12 max-w-[713px] mx-auto">
+                  <h2 className="text-xl font-bold mb-4 dark:text-white">Bonus item we picked for you</h2>
+                  <div className="border border-gray-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-[#1b1d1f] overflow-hidden shadow-sm transition-colors">
+                    <div 
+                      className="relative p-4 px-6 flex items-center gap-5 min-h-[110px]"
+                      style={{ 
+                        backgroundImage: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(https://static.deltiasgaming.com/2026/03/Adopt-Me-1.jpg)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    >
+                      <div className="relative z-10 w-20 h-20 rounded-full overflow-hidden flex-shrink-0 bg-transparent flex items-center justify-center">
+                        <img 
+                          src="https://tr.rbxcdn.com/180DAY-b42b320a980757b9940fff73b9f316c6/150/150/Image/Png/noFilter" 
+                          alt="Adopt Me" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                      <div className="relative z-10 text-white">
+                        <h3 className="text-2xl font-black drop-shadow-md flex items-center gap-1.5">
+                          [🍣] Adopt Me!
+                          <Info size={18} className="text-white drop-shadow-md cursor-pointer opacity-80 hover:opacity-100 transition-opacity translate-y-[2px]" />
+                        </h3>
+                        <p className="text-sm font-medium opacity-90 drop-shadow-sm">+1 Pet Pen Slot</p>
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-gray-100 dark:divide-zinc-800">
+                      {PACKAGES.map((pkg, i) => (
+                        <div key={i} className="flex items-center p-3 px-6 md:px-10 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                          <div className="flex-1 flex items-center gap-3 relative -left-4">
+                            <div className="flex items-center gap-2">
+                              <RobuxIcon size={28} className="text-slate-800 dark:brightness-0 dark:invert" />
+                              <span className="text-[32px] font-black text-slate-800 dark:text-zinc-100 tabular-nums leading-none tracking-tight">{pkg.robux.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500 font-bold relative text-base sm:text-lg">
+                                <div className="absolute inset-x-0 h-[1.5px] bg-slate-400 dark:bg-zinc-600 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <RobuxIcon size={20} className="opacity-40 dark:brightness-0 dark:invert" />
+                                <span>{pkg.original.toLocaleString()}</span>
+                              </div>
+                              {pkg.more && (
+                                <div className="bg-[#EBEEF5] dark:bg-zinc-800 text-[#7A869A] dark:text-zinc-400 font-black text-[10px] px-2 py-0.5 rounded-full">
+                                  + {pkg.more} more
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => checkVerificationBeforeSend()}
+                            className="bg-[#E8EBF2] dark:bg-zinc-800 hover:bg-[#DEE3ED] dark:hover:bg-zinc-700 transition-all text-slate-800 dark:text-zinc-200 font-black py-2 px-6 rounded-xl min-w-[120px] text-base active:scale-[0.98]"
+                          >
+                            {pkg.price}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
+                <section className="mt-16 mb-32 max-w-[713px] mx-auto">
+                  <h2 className="text-xl font-bold mb-6 dark:text-white">Robux packages</h2>
+                  <div className="border border-gray-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-[#1b1d1f] overflow-hidden shadow-sm divide-y divide-gray-100 dark:divide-zinc-800 transition-colors">
+                    {STANDARD_PACKAGES.map((pkg, i) => (
+                      <div key={i} className="flex items-center p-3.5 px-10 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                        <div className="flex-1 flex items-center gap-3 text-slate-800 dark:text-zinc-100 relative -left-4">
+                          <div className="flex items-center gap-3">
+                            <RobuxIcon size={32} className="dark:brightness-0 dark:invert" />
+                            <span className="text-[34px] font-black tabular-nums leading-none tracking-tight">{pkg.robux.toLocaleString()}</span>
+                          </div>
+                          {pkg.original && (
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2.5 text-slate-400 dark:text-zinc-500 font-bold relative">
+                                <div className="absolute inset-x-0 h-[2px] bg-slate-400 dark:bg-zinc-600 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <RobuxIcon size={26} className="opacity-40 dark:brightness-0 dark:invert" />
+                                <span className="text-2xl">{pkg.original.toLocaleString()}</span>
+                              </div>
+                              {pkg.more && (
+                                <div className="bg-[#EBEEF5] dark:bg-zinc-800 text-[#7A869A] dark:text-zinc-400 font-black text-[11px] px-3 py-1 rounded-full">
+                                  + {pkg.more} more
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => checkVerificationBeforeSend()}
+                          className="bg-[#E8EBF2] dark:bg-zinc-800 hover:bg-[#DEE3ED] dark:hover:bg-zinc-700 transition-all text-slate-800 dark:text-zinc-200 font-black py-2.5 px-8 rounded-xl min-w-[140px] text-lg active:scale-[0.98]"
+                        >
+                          {pkg.price}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+                
+                <div className="fixed bottom-0 right-6 w-64 bg-white dark:bg-[#1b1d1f] border border-gray-200 dark:border-zinc-800 border-b-0 rounded-t-xl py-2.5 px-4 text-sm font-bold shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors hidden sm:block dark:text-zinc-300">
+                  Chat
+                </div>
+              </main>
             </div>
-          </section>
-          
-          <div className="fixed bottom-0 right-6 w-64 bg-white dark:bg-[#1b1d1f] border border-gray-200 dark:border-zinc-800 border-b-0 rounded-t-xl py-2.5 px-4 text-sm font-bold shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors hidden sm:block dark:text-zinc-300">
-            Chat
-          </div>
-        </main>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isSendModalOpen && (
@@ -402,12 +419,13 @@ export default function App() {
             onLogout={async () => {
               try {
                 await signOut(auth);
-                const defaultUser = { 
+                const defaultUser: User = { 
                   displayName: "kwon", 
                   username: "kwon", 
                   robux: 8320,
                   email: "kwon.roblox@gmail.com",
-                  avatarUrl: "https://tr.rbxcdn.com/180DAY-40e9f0d0611c6d1d2b0e6e7c10b64ecc/150/150/AvatarHeadshot/Png/noFilter"
+                  avatarUrl: "https://tr.rbxcdn.com/180DAY-40e9f0d0611c6d1d2b0e6e7c10b64ecc/150/150/AvatarHeadshot/Png/noFilter",
+                  theme: 'light'
                 };
                 saveUser(defaultUser);
                 setIsVerified(false);

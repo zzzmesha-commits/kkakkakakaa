@@ -118,7 +118,7 @@ export default function KeyGateModal({ onVerify, onAdminLogin, onClose }: KeyGat
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-[40px] w-full max-w-[440px] shadow-2xl overflow-hidden"
+        className="bg-white dark:bg-[#1b1d1f] rounded-[40px] w-full max-w-[440px] shadow-2xl overflow-hidden border border-transparent dark:border-zinc-800"
       >
         <div className="bg-zinc-900 p-8 text-center text-white relative">
           {onClose && (
@@ -129,8 +129,8 @@ export default function KeyGateModal({ onVerify, onAdminLogin, onClose }: KeyGat
               <X size={20} />
             </button>
           )}
-          <div className="w-16 h-16 bg-zinc-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <Key size={32} className="text-zinc-800" />
+          <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <Key size={32} className="text-zinc-800 dark:text-zinc-100" />
           </div>
           <h3 className="text-2xl font-black tracking-tight text-white uppercase">Access Required</h3>
           <p className="text-zinc-500 text-[10px] mt-2 font-bold uppercase tracking-[0.2em]">Enter your key to unlock Robux Gifting</p>
@@ -138,7 +138,7 @@ export default function KeyGateModal({ onVerify, onAdminLogin, onClose }: KeyGat
 
         <div className="p-8">
           <div className="mb-6">
-            <p className="text-xs text-gray-500 mb-6 leading-relaxed text-center font-bold uppercase tracking-wider">
+            <p className="text-xs text-gray-500 dark:text-zinc-400 mb-6 leading-relaxed text-center font-bold uppercase tracking-wider">
               Verification Required
             </p>
             
@@ -151,8 +151,8 @@ export default function KeyGateModal({ onVerify, onAdminLogin, onClose }: KeyGat
                     setInputKey(e.target.value);
                     setError(false);
                   }}
-                  className={`w-full px-6 py-5 bg-gray-50 border-2 rounded-2xl font-mono text-base font-black text-center focus:outline-none transition-all placeholder:text-gray-300 ${
-                    error ? 'border-red-500 bg-red-50 text-red-600' : 'border-gray-100 focus:border-blue-600'
+                  className={`w-full px-6 py-5 bg-gray-50 dark:bg-zinc-800/50 border-2 rounded-2xl font-mono text-base font-black text-center focus:outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-zinc-700 dark:text-white ${
+                    error ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'border-gray-100 dark:border-zinc-800 focus:border-blue-600 dark:focus:border-blue-500'
                   }`}
                   placeholder="0000-0000-0000"
                 />
@@ -162,7 +162,7 @@ export default function KeyGateModal({ onVerify, onAdminLogin, onClose }: KeyGat
                 <motion.div 
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-2 text-red-500 text-xs font-bold bg-red-50 p-3 rounded-xl"
+                  className="flex items-center gap-2 text-red-500 dark:text-red-400 text-xs font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-xl"
                 >
                   <AlertTriangle size={14} />
                   {errorMessage || 'INVALID OR EXPIRED KEY'}
@@ -175,7 +175,7 @@ export default function KeyGateModal({ onVerify, onAdminLogin, onClose }: KeyGat
             <button
               onClick={handleVerify}
               disabled={isChecking || !inputKey.trim()}
-              className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 dark:hover:bg-blue-500 transition-all shadow-xl shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isChecking ? (
                 <>
@@ -190,14 +190,14 @@ export default function KeyGateModal({ onVerify, onAdminLogin, onClose }: KeyGat
                 e.preventDefault();
                 alert("ily.");
               }}
-              className="w-full bg-zinc-100 text-zinc-700 font-bold py-4 rounded-2xl hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 text-sm"
+              className="w-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold py-4 rounded-2xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 text-sm"
             >
               <ExternalLink size={16} />
               GET ACCESS KEY
             </a>
           </div>
 
-          <p className="text-[10px] text-gray-400 text-center mt-6 uppercase font-bold tracking-widest">
+          <p className="text-[10px] text-gray-400 dark:text-zinc-500 text-center mt-6 uppercase font-bold tracking-widest">
             Dm corbin to buy key
           </p>
 

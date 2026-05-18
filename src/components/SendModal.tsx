@@ -203,18 +203,18 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
         {/* Header */}
         <div className={`flex items-center relative px-6 py-5 justify-between`}>
            <div className="flex items-center gap-0.5 pt-0.5">
-             <div className="w-8 h-8 flex items-center justify-center overflow-hidden shrink-0">
+             <div className="w-8 h-8 flex items-center justify-center shrink-0">
                 <img 
-                  src="https://media.discordapp.net/attachments/1501019720604844084/1504448680600666233/lXCZhkN64AAAAABJRU5ErkJggg.png?ex=6a0900c4&is=6a07af44&hm=1fb0d30c231caba3c9bdf7df9d977306bb2bb9b289027f1ad40b400baa3ed94d&=&format=webp&quality=lossless" 
-                  alt="Robux Logo" 
-                  className="w-full h-full object-contain"
+                  src="https://media.discordapp.net/attachments/899166961567678504/1505869983790399519/fJzUBtXeWsAAAAASUVORK5CYII.png?ex=6a0c3235&is=6a0ae0b5&hm=a7d0c4a9a7624e8f05f0c76c33bae2abc783274e489a21f31c0857cf75faeaa7&=&format=webp&quality=lossless" 
+                  alt="Roblox Plus" 
+                  className="w-full h-full object-contain dark:invert" 
                 />
              </div>
              <h3 className="text-[18px] font-black text-slate-800 dark:text-white tracking-tight ml-0.5">Send Robux</h3>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-zinc-200 mr-1">
-               <RobuxIcon className="w-4 h-4 text-slate-700 dark:text-zinc-400" />
+               <RobuxIcon className="w-4 h-4 dark:brightness-0 dark:invert" />
                <span className="text-sm">{user.robux.toLocaleString()}</span>
             </div>
             <button onClick={handleClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -318,7 +318,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                 {/* Big Amount Overall Display */}
                  <div className="flex items-center justify-center gap-3 mb-6 mt-4">
                     <div className="w-8 h-8 flex items-center justify-center">
-                       <RobuxIcon className="w-full h-full" />
+                       <RobuxIcon className="w-full h-full dark:brightness-0 dark:invert" />
                     </div>
                    <span className="text-4xl font-black text-slate-800 dark:text-white tabular-nums tracking-tighter leading-none">{amount.toLocaleString()}</span>
                  </div>
@@ -357,7 +357,10 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                            : 'bg-[#E8EBF2] dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-[#DEE3ED] dark:hover:bg-zinc-700'
                        }`}
                      >
-                       <RobuxIcon className={`w-3.5 h-3.5 ${amount === val ? (user.theme === 'dark' ? 'text-zinc-900' : 'text-white') : 'text-slate-500'}`} />
+                       <RobuxIcon className={`w-3.5 h-3.5 ${amount === val 
+                         ? 'brightness-0 invert dark:brightness-0 dark:invert-0' 
+                         : 'brightness-0 dark:brightness-0 dark:invert'}`} 
+                       />
                        {val}
                      </button>
                    ))}
@@ -394,7 +397,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                    />
                    <div className="absolute inset-0 flex items-center justify-center">
-                      <RobuxIcon className="w-10 h-10 animate-pulse" />
+                      <RobuxIcon className="w-10 h-10 animate-pulse dark:brightness-0 dark:invert" />
                    </div>
                 </div>
                 <h3 className="text-xl font-black text-slate-800 dark:text-white animate-pulse">Processing Transfer...</h3>
@@ -483,7 +486,7 @@ export default function SendModal({ isOpen, onClose, user, onSend, initialFriend
                 {/* Amount Box */}
                 <div className="w-full bg-[#F2F4F7] dark:bg-zinc-800/80 rounded-3xl py-10 mb-6 flex items-center justify-center gap-4 transition-colors">
                    <div className="w-12 h-12 flex items-center justify-center">
-                      <RobuxIcon className="w-full h-full" />
+                      <RobuxIcon className="w-full h-full dark:brightness-0 dark:invert" />
                    </div>
                    <span className="text-6xl font-black text-slate-800 dark:text-white tabular-nums tracking-tighter leading-none">{amount.toLocaleString()}</span>
                 </div>

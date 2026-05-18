@@ -1,6 +1,6 @@
-import { X } from 'lucide-react';
+import { X, Sun, Moon } from 'lucide-react';
 import { User } from '../types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 
 interface SettingsModalProps {
@@ -12,16 +12,38 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose, user, onSave, onLogout }: SettingsModalProps) {
-  const [formData, setFormData] = useState<User>(user);
+  const [formData, setFormData] = useState<User>(formDataFromProps(user));
+
+  useEffect(() => {
+    if (formData.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (formData.theme === 'light') {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [formData.theme, isOpen]);
+
+  function formDataFromProps(u: User): User {
+    return { ...u, theme: u.theme || 'light' };
+  }
 
   const handleSave = () => {
     onSave(formData);
   };
 
+  const handleClose = () => {
+    // Revert to original theme if closing without saving
+    if (user.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm ${formData.theme === 'dark' ? 'dark' : ''}`}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -29,7 +51,7 @@ export default function SettingsModal({ isOpen, onClose, user, onSave, onLogout 
       >
         <div className="flex justify-between items-center px-6 py-4.5 border-b border-gray-100 dark:border-zinc-800">
           <h3 className="text-xl font-bold dark:text-white">Settings</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
             <X size={28} />
           </button>
         </div>
@@ -90,6 +112,36 @@ export default function SettingsModal({ isOpen, onClose, user, onSave, onLogout 
                 className="w-full px-4 py-3 border border-gray-200 dark:border-zinc-700 bg-transparent dark:text-white rounded-2xl text-base focus:outline-none focus:border-blue-500 transition-colors"
                 placeholder="Balance"
               />
+            </div>
+
+            <div className="space-y-1.5 pt-2">
+              <label className="block text-sm font-medium text-gray-500 dark:text-zinc-400">Application Theme</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, theme: 'light' })}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border transition-all ${
+                    formData.theme === 'light' 
+                      ? 'border-blue-600 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:border-blue-500 dark:text-blue-400' 
+                      : 'border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  <Sun size={18} />
+                  <span className="font-bold">Light</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, theme: 'dark' })}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border transition-all ${
+                    formData.theme === 'dark' 
+                      ? 'border-blue-600 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:border-blue-500 dark:text-blue-400' 
+                      : 'border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  <Moon size={18} />
+                  <span className="font-bold">Dark</span>
+                </button>
+              </div>
             </div>
           </div>
 

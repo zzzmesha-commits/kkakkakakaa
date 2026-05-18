@@ -12,15 +12,15 @@ export default function ProfileResults({ results, onSendRobux, onClose }: Profil
   return (
     <div className="mb-12">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold flex items-center gap-2">
+        <h2 className="text-xl font-bold flex items-center gap-2 dark:text-white">
           Search Results 
-          <span className="text-xs font-medium bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
+          <span className="text-xs font-medium bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 px-2 py-0.5 rounded-full">
             {results.length} Profiles Found
           </span>
         </h2>
         <button 
           onClick={onClose}
-          className="text-sm font-semibold text-gray-400 hover:text-gray-900"
+          className="text-sm font-semibold text-gray-400 hover:text-gray-900 dark:hover:text-white"
         >
           Clear Results
         </button>
@@ -38,10 +38,10 @@ export default function ProfileResults({ results, onSendRobux, onClose }: Profil
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
-                className="group relative border border-gray-200 rounded-2xl bg-white p-5 hover:shadow-xl hover:-translate-y-1 transition-all"
+                className="group relative border border-gray-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-[#1b1d1f] p-5 hover:shadow-xl hover:-translate-y-1 transition-all"
               >
                 <div className="flex items-start gap-4">
-                  <div className="relative w-20 h-20 rounded-2xl bg-gray-100 overflow-hidden flex-shrink-0 border-2 border-gray-50">
+                  <div className="relative w-20 h-20 rounded-2xl bg-gray-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0 border-2 border-gray-50 dark:border-zinc-700">
                     {profile.avatarUrl ? (
                       <img 
                         src={profile.avatarUrl} 
@@ -57,12 +57,12 @@ export default function ProfileResults({ results, onSendRobux, onClose }: Profil
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 font-bold text-2xl">
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 font-bold text-2xl">
                         {profile.avatarLetter}
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 text-slate-800 dark:text-zinc-100">
                     <div className="flex items-center gap-1.5">
                       <h3 className="font-bold text-lg truncate">{profile.display}</h3>
                       <img 
@@ -72,7 +72,7 @@ export default function ProfileResults({ results, onSendRobux, onClose }: Profil
                       />
                     </div>
                     <div className="mb-3">
-                      <p className="text-sm text-gray-500 truncate">@{profile.username}</p>
+                      <p className="text-sm text-gray-500 dark:text-zinc-400 truncate">@{profile.username}</p>
                     </div>
                     <button
                       onClick={() => onSendRobux(profile)}
@@ -83,7 +83,7 @@ export default function ProfileResults({ results, onSendRobux, onClose }: Profil
                   </div>
                 </div>
                 <div className="absolute top-4 right-4">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900" />
                 </div>
               </motion.div>
             );

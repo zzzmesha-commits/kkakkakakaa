@@ -31,17 +31,17 @@ export default function Topbar({
 
   return (
     <header className="sticky top-0 z-50 flex items-center gap-6 h-14 px-6 border-b border-gray-200 bg-white dark:bg-[#0c0d0e] dark:border-zinc-800 transition-colors">
-      <a href="#" className="text-2xl font-black tracking-[-0.08em] flex items-center gap-0.5 dark:text-white">
+      <a href="#" className="text-xl font-black tracking-[-0.08em] flex items-center gap-0.5 dark:text-white">
         <span>R</span>
         <span className="inline-block transform rotate-12 -mt-0.5">O</span>
         <span>BLOX</span>
       </a>
-      <nav className="hidden lg:flex items-center gap-16 ml-12">
+      <nav className="hidden lg:flex items-center gap-14 ml-16">
         {['Charts', 'Marketplace', 'Create', 'Robux'].map((item) => (
           <a
             key={item}
             href="#"
-            className="text-[15px] font-black text-[#232527] dark:text-zinc-300 hover:text-[#0074BD] dark:hover:text-[#00A2FF] transition-all uppercase tracking-[0.08em] opacity-90 hover:opacity-100"
+            className="text-[13px] font-bold text-[#232527] dark:text-zinc-300 hover:text-[#0074BD] dark:hover:text-[#00A2FF] transition-all uppercase tracking-[0.08em] opacity-90 hover:opacity-100"
           >
             {item}
           </a>
@@ -49,7 +49,7 @@ export default function Topbar({
       </nav>
       <form 
         onSubmit={handleSubmit}
-        className="max-w-[440px] hidden lg:flex flex-1 items-center gap-2 bg-[#EBEDF0] dark:bg-zinc-800 border border-[#DEE1E5] dark:border-zinc-700 px-3 py-1.5 rounded-md text-[#616A72] dark:text-zinc-400 group focus-within:border-zinc-400 dark:focus-within:border-zinc-500 focus-within:bg-white dark:focus-within:bg-zinc-700 transition-all relative ml-8"
+        className="max-w-[440px] hidden lg:flex flex-1 items-center gap-2 bg-[#EBEDF0] dark:bg-zinc-800 border border-[#DEE1E5] dark:border-zinc-700 px-3 py-1.5 rounded-md text-[#616A72] dark:text-zinc-400 group focus-within:border-zinc-400 dark:focus-within:border-zinc-500 focus-within:bg-white dark:focus-within:bg-zinc-700 transition-all relative ml-12"
       >
         <Search size={16} strokeWidth={2.5} />
         <input
@@ -78,11 +78,6 @@ export default function Topbar({
           </div>
           <div className="hidden lg:flex items-center gap-1">
             <span>{user.displayName}</span>
-            <img 
-              src="https://en.help.roblox.com/hc/article_attachments/41933934939156" 
-              alt="Verified" 
-              className="w-3.5 h-3.5 object-contain shrink-0"
-            />
           </div>
         </div>
         <button className="relative flex text-[#393B3D] dark:text-zinc-300 hover:text-black dark:hover:text-white">
@@ -92,7 +87,7 @@ export default function Topbar({
           </span>
         </button>
         <div className="flex items-center gap-1.5 text-[13px] font-bold text-[#393B3D] dark:text-zinc-200">
-          <RobuxIcon size={20} />
+          <RobuxIcon size={20} className="dark:brightness-0 dark:invert" />
           <span>{user.robux.toLocaleString()}</span>
         </div>
         <button 
